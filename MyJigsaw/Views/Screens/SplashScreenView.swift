@@ -34,20 +34,20 @@ struct SplashScreenView: View {
                 
                 // 标题
                 VStack(spacing: 8) {
-                    Text("MyJigsaw")
-                        .font(.system(size: 40, weight: .bold, design: .serif))
+                    Text("画境重圆")
+                        .font(.qianTuBiFeng(size: 50))
+                        .foregroundColor(.traditional.ink)
+                        .tracking(4) // 增加字间距
+
+                    Text("Painted Realm Reunited")
+                        .font(.dancingScript(size: 25))
                         .foregroundColor(.black.opacity(0.8))
                     
-                    Text("传统文化拼图")
-                        .font(.title3)
-                        .fontWeight(.medium)
-                        .foregroundColor(.gray)
-                        .tracking(2) // 增加字间距
                 }
                 
                 // Slogan
                 Text("指尖上的传统艺术")
-                    .font(.subheadline)
+                    .font(.qianTuBiFeng(size: 16))
                     .foregroundColor(.gray.opacity(0.8))
                     .padding(.top, 40)
             }

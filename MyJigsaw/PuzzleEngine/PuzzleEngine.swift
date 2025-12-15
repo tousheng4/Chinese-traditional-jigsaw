@@ -13,9 +13,10 @@ import Combine
 // MARK: - Puzzle Engine
 class PuzzleEngine: ObservableObject {
     @Published var gameState = GameState()
-    
+
     private let persistenceManager = PersistenceManager.shared
     private let settingsManager = SettingsManager.shared
+    private let achievementCenter = AchievementCenter.shared
     
     // MARK: - Initialization
     init() {
@@ -43,19 +44,22 @@ class PuzzleEngine: ObservableObject {
                     time: gameState.elapsedTime,
                     moves: gameState.moveCount
                 )
-                
+
+                // 触发成就评估
+                achievementCenter.handleLevelCompleted(levelId: level.id, categoryId: level.categoryId.uuidString)
+
                 // Play completion sound if enabled
                 if settingsManager.appSettings.soundEnabled {
                     playSound(.gameComplete)
                 }
-                
+
                 // Trigger haptic feedback if enabled
                 if settingsManager.appSettings.hapticsEnabled {
                     triggerHaptic(.success)
                 }
             }
         }
-        
+
         gameState.endGame()
     }
     
@@ -78,11 +82,15 @@ class PuzzleEngine: ObservableObject {
     func handlePieceTap(_ piece: PuzzlePiece) {
         guard piece.isLocked == false else { return }
         gameState.selectPiece(piece)
-        
+
         // Provide haptic feedback
         if settingsManager.appSettings.hapticsEnabled {
             triggerHaptic(.selection)
         }
+    }
+
+    func autoCompleteGame() {
+        gameState.autoCompleteGame()
     }
     
     // MARK: - Audio & Haptics

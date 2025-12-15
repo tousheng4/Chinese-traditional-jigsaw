@@ -282,13 +282,34 @@ class GameState {
             if let startTime = startTime {
                 elapsedTime = Date().timeIntervalSince(startTime)
             }
+
+            // 游戏完成时立即保存进度
+            if let level = currentLevel {
+                PersistenceManager.shared.saveGameProgress(
+                    levelId: level.id,
+                    isCompleted: true,
+                    time: elapsedTime,
+                    moves: moveCount
+                )
+            }
         }
     }
     
     func toggleHint() {
         showHint.toggle()
     }
-    
+
+    func autoCompleteGame() {
+        // 将所有拼图块移动到正确位置并锁定
+        for index in puzzlePieces.indices {
+            puzzlePieces[index].currentPosition = puzzlePieces[index].targetPosition
+            puzzlePieces[index].isLocked = true
+        }
+
+        // 触发游戏完成检查
+        checkGameCompletion()
+    }
+
     // MARK: - Timer
     func updateTimer() {
         if isGameActive, let startTime = startTime {

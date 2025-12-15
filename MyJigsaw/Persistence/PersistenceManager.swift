@@ -21,6 +21,7 @@ class PersistenceManager: ObservableObject {
         static let puzzleProgress = "puzzle_progress"
         static let unlockedCategories = "unlocked_categories"
         static let appFirstLaunch = "app_first_launch"
+        static let achievementStates = "achievement_states"
     }
     
     private init() {}
@@ -28,19 +29,22 @@ class PersistenceManager: ObservableObject {
     // MARK: - Puzzle Progress
     func saveGameProgress(levelId: UUID, isCompleted: Bool, time: TimeInterval?, moves: Int?) {
         var progress = getGameProgress(for: levelId)
-        
+
         progress.isCompleted = progress.isCompleted || isCompleted
         progress.lastPlayedAt = Date()
-        
+
         if let time = time, progress.bestTime == nil || time < progress.bestTime! {
             progress.bestTime = time
         }
-        
+
         if let moves = moves, progress.bestMoves == nil || moves < progress.bestMoves! {
             progress.bestMoves = moves
         }
-        
+
         saveProgress(progress)
+
+        // 通知UI更新
+        objectWillChange.send()
     }
     
     func getGameProgress(for levelId: UUID) -> PuzzleProgress {
@@ -97,5 +101,36 @@ class PersistenceManager: ObservableObject {
     
     func isCategoryUnlocked(_ categoryId: UUID) -> Bool {
         return getUnlockedCategories().contains(categoryId)
+    }
+
+    // MARK: - Achievement States
+    func saveAchievementState(_ state: AchievementState) {
+        var allStates = getAllAchievementStates()
+
+        if let index = allStates.firstIndex(where: { $0.achievementId == state.achievementId }) {
+            allStates[index] = state
+        } else {
+            allStates.append(state)
+        }
+
+        if let data = try? encoder.encode(allStates) {
+            userDefaults.set(data, forKey: Keys.achievementStates)
+        }
+
+        // 通知UI更新
+        objectWillChange.send()
+    }
+
+    func getAchievementState(for achievementId: String) -> AchievementState? {
+        let allStates = getAllAchievementStates()
+        return allStates.first { $0.achievementId == achievementId }
+    }
+
+    func getAllAchievementStates() -> [AchievementState] {
+        guard let data = userDefaults.data(forKey: Keys.achievementStates),
+              let states = try? decoder.decode([AchievementState].self, from: data) else {
+            return []
+        }
+        return states
     }
 }

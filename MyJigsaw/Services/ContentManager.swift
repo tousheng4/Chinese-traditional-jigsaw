@@ -49,6 +49,14 @@ class ContentManager: ObservableObject {
                 description: "山水、花鸟、人物等传统国画拼图",
                 coverImageName: "category_guohua",
                 sortOrder: 4
+            ),
+            PuzzleCategory(
+                id: UGCManager.ugcCategoryId,
+                title: "自制拼图",
+                description: "上传你的照片，创建专属拼图",
+                coverImageName: "photo.fill", // 使用系统图标作为封面
+                sortOrder: 5,
+                isUGC: true
             )
         ]
         
@@ -123,7 +131,25 @@ class ContentManager: ObservableObject {
     
     // MARK: - Content Access
     func getLevels(for categoryId: UUID) -> [PuzzleLevel] {
-        return levels.filter { $0.categoryId == categoryId }
+        if categoryId == UGCManager.ugcCategoryId {
+            // 返回UGC关卡
+            return UGCManager.shared.ugcPuzzles.map { $0.toPuzzleLevel() }
+        } else {
+            // 返回普通关卡
+            return levels.filter { $0.categoryId == categoryId }
+        }
+    }
+
+    func getLevels(forCategoryId categoryId: String) -> [PuzzleLevel] {
+        // 根据字符串ID获取关卡（用于成就系统）
+        if let uuid = UUID(uuidString: categoryId) {
+            return getLevels(for: uuid)
+        }
+        return []
+    }
+
+    func getUGCPuzzle(for levelId: UUID) -> UGCPuzzle? {
+        return UGCManager.shared.ugcPuzzles.first { $0.id == levelId }
     }
     
     func getCategory(for categoryId: UUID) -> PuzzleCategory? {

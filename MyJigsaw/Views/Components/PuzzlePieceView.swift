@@ -6,12 +6,14 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct PuzzlePieceView: View {
     let piece: PuzzlePiece
     let gridSize: Int
     let boardSize: CGFloat
     let imageName: String
+    let sourceImage: UIImage?
     let isSelected: Bool
     let showHint: Bool
     
@@ -71,14 +73,21 @@ struct PuzzlePieceView: View {
 
         // 核心思路：所有碎片共享同一张“棋盘尺寸”的图（同一缩放/裁切），
         // 通过平移整图，让当前块应显示的那一格“中心”对齐到碎片视图中心，再 clip 即可。
-        return Image(imageName)
-            .resizable()
-            .scaledToFill()
-            .frame(width: boardSize, height: boardSize)
-            .clipped()
-            .offset(x: offsetX, y: offsetY)
-            .frame(width: pieceSize, height: pieceSize)
-            .clipped()
+        return Group {
+            if let sourceImage {
+                Image(uiImage: sourceImage)
+                    .resizable()
+            } else {
+                Image(imageName)
+                    .resizable()
+            }
+        }
+        .scaledToFill()
+        .frame(width: boardSize, height: boardSize)
+        .clipped()
+        .offset(x: offsetX, y: offsetY)
+        .frame(width: pieceSize, height: pieceSize)
+        .clipped()
     }
     
     // MARK: - Helper Properties
@@ -111,6 +120,7 @@ struct PuzzlePieceView: View {
             gridSize: 3,
             boardSize: 300,
             imageName: "sample",
+            sourceImage: nil,
             isSelected: false,
             showHint: false
         )
@@ -125,6 +135,7 @@ struct PuzzlePieceView: View {
             gridSize: 3,
             boardSize: 300,
             imageName: "sample",
+            sourceImage: nil,
             isSelected: true,
             showHint: false
         )
@@ -140,6 +151,7 @@ struct PuzzlePieceView: View {
             gridSize: 3,
             boardSize: 300,
             imageName: "sample",
+            sourceImage: nil,
             isSelected: false,
             showHint: true
         )

@@ -11,6 +11,7 @@ struct HomeView: View {
     @StateObject private var contentManager = ContentManager.shared
     @StateObject private var settingsManager = SettingsManager.shared
     @State private var showingSettings = false
+    @State private var showingAchievements = false
     
     var body: some View {
         NavigationStack {
@@ -29,7 +30,13 @@ struct HomeView: View {
             // .navigationTitle("拼图游戏")
             //.navigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        showingAchievements = true
+                    }) {
+                        Image(systemName: "trophy.fill")
+                    }
+
                     Button(action: {
                         showingSettings = true
                     }) {
@@ -39,6 +46,11 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
+            }
+            .sheet(isPresented: $showingAchievements) {
+                NavigationStack {
+                    AchievementView()
+                }
             }
         }
     }
@@ -79,23 +91,39 @@ struct HomeView: View {
 // MARK: - Category Card
 struct CategoryCard: View {
     let category: PuzzleCategory
-    
+
     var body: some View {
         VStack(alignment: .center, spacing: 8) {
-            Image(category.coverImageName)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 120, height: 120)
-                .cornerRadius(12)
-                .clipped()
+            if category.isUGC {
+                // UGC分类使用图标
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.traditional.vermilion.opacity(0.1))
+                        .frame(width: 120, height: 120)
+
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.system(size: 48))
+                        .foregroundColor(.traditional.vermilion)
+                }
+            } else {
+                // 普通分类使用图片
+                Image(category.coverImageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 120, height: 120)
+                    .cornerRadius(12)
+                    .clipped()
+            }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(category.title)
-                    .traditionalHeadline()
+                    .font(.system(.headline, design: .serif))
+                    .fontWeight(.medium)
+                    .foregroundColor(.traditional.ink)
                     .lineLimit(1)
-                
+
                 Text(category.description)
-                    .font(.caption)
+                    .font(.qianTuBiFeng(size: 12))
                     .foregroundColor(.traditional.ink.opacity(0.6))
                     .lineLimit(2)
             }
