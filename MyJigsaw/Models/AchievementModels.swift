@@ -55,14 +55,96 @@ struct AchievementDefinition: Identifiable, Codable, Equatable {
             )
         }
     }
+
+    // 全局有趣成就
+    static var globalAchievements: [AchievementDefinition] {
+        return [
+            // 速度成就
+            AchievementDefinition(
+                id: "ach_speed_demon",
+                title: "闪电侠",
+                description: "在2分钟内完成任意关卡",
+                iconAssetName: "bolt.fill",
+                criterion: .completeLevelInTime(maxTimeSeconds: 120, minDifficulty: nil)
+            ),
+            AchievementDefinition(
+                id: "ach_ultra_fast",
+                title: "超速者",
+                description: "在1分钟内完成任意关卡",
+                iconAssetName: "flame.fill",
+                criterion: .completeLevelInTime(maxTimeSeconds: 60, minDifficulty: nil)
+            ),
+
+            // 步数成就
+            AchievementDefinition(
+                id: "ach_efficient",
+                title: "高效大师",
+                description: "用少于50步完成任意关卡",
+                iconAssetName: "target",
+                criterion: .completeWithFewMoves(maxMoves: 50)
+            ),
+            AchievementDefinition(
+                id: "ach_minimalist",
+                title: "极简主义者",
+                description: "用少于30步完成任意关卡",
+                iconAssetName: "minus.circle.fill",
+                criterion: .completeWithFewMoves(maxMoves: 30)
+            ),
+
+            // 连续成就
+            AchievementDefinition(
+                id: "ach_streak_3",
+                title: "连击达人",
+                description: "连续完成3个关卡",
+                iconAssetName: "3.circle.fill",
+                criterion: .completeLevelsInRow(count: 3)
+            ),
+            AchievementDefinition(
+                id: "ach_streak_5",
+                title: "连击大师",
+                description: "连续完成5个关卡",
+                iconAssetName: "5.circle.fill",
+                criterion: .completeLevelsInRow(count: 5)
+            ),
+
+            // 综合成就
+            AchievementDefinition(
+                id: "ach_master_collector",
+                title: "传统文化大师",
+                description: "完成所有分类的所有关卡",
+                iconAssetName: "crown.fill",
+                criterion: .completeAllCategories
+            ),
+            AchievementDefinition(
+                id: "ach_first_steps",
+                title: "初学者",
+                description: "完成第一个拼图关卡",
+                iconAssetName: "star.fill",
+                criterion: .firstTimePlayer
+            ),
+            AchievementDefinition(
+                id: "ach_speed_runner",
+                title: "速通大师",
+                description: "总游戏时间超过10小时",
+                iconAssetName: "clock.fill",
+                criterion: .speedRunner(totalTimeSeconds: 36000)
+            )
+        ]
+    }
 }
 
 // MARK: - Achievement Criterion
 enum AchievementCriterion: Codable, Equatable {
     case completeAllLevels(categoryId: String, difficultyScope: DifficultyScope?, countsOnly: Bool)
+    case completeLevelInTime(maxTimeSeconds: Int, minDifficulty: DifficultyScope?)
+    case completeWithFewMoves(maxMoves: Int)
+    case completeLevelsInRow(count: Int)
+    case completeAllCategories
+    case firstTimePlayer
+    case speedRunner(totalTimeSeconds: Int)
 
     enum CodingKeys: String, CodingKey {
-        case type, categoryId, difficultyScope, countsOnly
+        case type, categoryId, difficultyScope, countsOnly, maxTimeSeconds, minDifficulty, maxMoves, count, totalTimeSeconds
     }
 
     func encode(to encoder: Encoder) throws {
@@ -73,6 +155,23 @@ enum AchievementCriterion: Codable, Equatable {
             try container.encode(categoryId, forKey: .categoryId)
             try container.encode(difficultyScope, forKey: .difficultyScope)
             try container.encode(countsOnly, forKey: .countsOnly)
+        case .completeLevelInTime(let maxTimeSeconds, let minDifficulty):
+            try container.encode("completeLevelInTime", forKey: .type)
+            try container.encode(maxTimeSeconds, forKey: .maxTimeSeconds)
+            try container.encode(minDifficulty, forKey: .minDifficulty)
+        case .completeWithFewMoves(let maxMoves):
+            try container.encode("completeWithFewMoves", forKey: .type)
+            try container.encode(maxMoves, forKey: .maxMoves)
+        case .completeLevelsInRow(let count):
+            try container.encode("completeLevelsInRow", forKey: .type)
+            try container.encode(count, forKey: .count)
+        case .completeAllCategories:
+            try container.encode("completeAllCategories", forKey: .type)
+        case .firstTimePlayer:
+            try container.encode("firstTimePlayer", forKey: .type)
+        case .speedRunner(let totalTimeSeconds):
+            try container.encode("speedRunner", forKey: .type)
+            try container.encode(totalTimeSeconds, forKey: .totalTimeSeconds)
         }
     }
 
@@ -86,6 +185,23 @@ enum AchievementCriterion: Codable, Equatable {
             let difficultyScope = try container.decodeIfPresent(DifficultyScope.self, forKey: .difficultyScope)
             let countsOnly = try container.decode(Bool.self, forKey: .countsOnly)
             self = .completeAllLevels(categoryId: categoryId, difficultyScope: difficultyScope, countsOnly: countsOnly)
+        case "completeLevelInTime":
+            let maxTimeSeconds = try container.decode(Int.self, forKey: .maxTimeSeconds)
+            let minDifficulty = try container.decodeIfPresent(DifficultyScope.self, forKey: .minDifficulty)
+            self = .completeLevelInTime(maxTimeSeconds: maxTimeSeconds, minDifficulty: minDifficulty)
+        case "completeWithFewMoves":
+            let maxMoves = try container.decode(Int.self, forKey: .maxMoves)
+            self = .completeWithFewMoves(maxMoves: maxMoves)
+        case "completeLevelsInRow":
+            let count = try container.decode(Int.self, forKey: .count)
+            self = .completeLevelsInRow(count: count)
+        case "completeAllCategories":
+            self = .completeAllCategories
+        case "firstTimePlayer":
+            self = .firstTimePlayer
+        case "speedRunner":
+            let totalTimeSeconds = try container.decode(Int.self, forKey: .totalTimeSeconds)
+            self = .speedRunner(totalTimeSeconds: totalTimeSeconds)
         default:
             throw DecodingError.dataCorruptedError(forKey: .type, in: container, debugDescription: "Unknown criterion type")
         }

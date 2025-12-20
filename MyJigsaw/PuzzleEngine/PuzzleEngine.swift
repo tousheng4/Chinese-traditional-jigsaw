@@ -39,19 +39,16 @@ class PuzzleEngine: ObservableObject {
             // Save progress
             if let level = gameState.currentLevel {
                 persistenceManager.saveGameProgress(
-                    levelId: level.id,
+                    levelStableId: level.stableId,
                     isCompleted: true,
                     time: gameState.elapsedTime,
                     moves: gameState.moveCount
                 )
 
                 // 触发成就评估
-                achievementCenter.handleLevelCompleted(levelId: level.id, categoryId: level.categoryId.uuidString)
+                achievementCenter.handleLevelCompleted(levelStableId: level.stableId, categoryId: level.categoryId.uuidString)
 
-                // Play completion sound if enabled
-                if settingsManager.appSettings.soundEnabled {
-                    playSound(.gameComplete)
-                }
+                // 注意：成功音效现在在恭喜界面出现时播放
 
                 // Trigger haptic feedback if enabled
                 if settingsManager.appSettings.hapticsEnabled {

@@ -11,12 +11,14 @@ import Combine
 // MARK: - Content Manager
 class ContentManager: ObservableObject {
     static let shared = ContentManager()
-    
+
     @Published var categories: [PuzzleCategory] = []
     @Published var levels: [PuzzleLevel] = []
-    
+    @Published var microAnnotationPacks: [MicroAnnotationPack] = []
+
     private init() {
         loadInitialContent()
+        loadMicroAnnotations()
     }
     
     // MARK: - Content Loading
@@ -62,6 +64,22 @@ class ContentManager: ObservableObject {
         
         // Create sample levels for each category
         levels = createSampleLevels()
+    }
+
+    private func loadMicroAnnotations() {
+        guard let url = Bundle.main.url(forResource: "micro_notes", withExtension: "json") else {
+            print("❌ 找不到 micro_notes.json 文件")
+            return
+        }
+
+        do {
+            let data = try Data(contentsOf: url)
+            let decoder = JSONDecoder()
+            microAnnotationPacks = try decoder.decode([MicroAnnotationPack].self, from: data)
+            //print("✅ 成功加载 \(microAnnotationPacks.count) 个微注释包")
+        } catch {
+            //print("❌ 加载微注释数据失败: \(error.localizedDescription)")
+        }
     }
     
     private func createSampleLevels() -> [PuzzleLevel] {
@@ -112,6 +130,9 @@ class ContentManager: ObservableObject {
                         previewImageName = "guohua_03"
                     }
                 }
+                // 创建稳定的关卡标识符：基于分类名称和难度
+                let stableId = "\(category.title)_\(difficulty.rawValue)"
+
                 let level = PuzzleLevel(
                     categoryId: category.id,
                     title: "\(category.title) - \(difficulty.rawValue)",
@@ -120,7 +141,8 @@ class ContentManager: ObservableObject {
                     gridSize: difficulty.gridSize,
                     difficulty: difficulty,
                     //isLocked: index > 0 // Unlock first category only
-                    isLocked: false
+                    isLocked: false,
+                    stableId: stableId
                 )
                 levels.append(level)
             }
@@ -158,6 +180,17 @@ class ContentManager: ObservableObject {
     
     func getLevel(for levelId: UUID) -> PuzzleLevel? {
         return levels.first { $0.id == levelId }
+    }
+
+    func getMicroAnnotationPack(for artworkId: String) -> MicroAnnotationPack? {
+        return microAnnotationPacks.first { $0.artworkId == artworkId }
+    }
+
+    func getMicroAnnotationPack(for level: PuzzleLevel) -> MicroAnnotationPack? {
+        // 根据关卡的预览图片名称匹配微注释包
+        // 例如：预览图片名为 "nianhua_01"，对应的微注释包ID为 "nianhua_01_pack"
+        let artworkId = level.previewImageName
+        return getMicroAnnotationPack(for: artworkId)
     }
     
     // MARK: - Content Management

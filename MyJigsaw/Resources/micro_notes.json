@@ -1,0 +1,566 @@
+[
+  {
+    "id": "nianhua_01_pack",
+    "artworkId": "nianhua_01",
+    "microNotes": [
+      {
+        "id": "nianhua_01_note_1",
+        "text": "年画中的红色寓意吉祥与喜庆，传统年画多用朱砂色调表达祝福。",
+        "priority": 0,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "nianhua_01_note_2",
+        "text": "儿童形象代表多子多福，喜鹊登枝象征喜事临门。",
+        "priority": 1,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "nianhua_01_note_3",
+        "text": "窗花剪纸源于汉代，寓意驱邪避祟，保佑家人平安。",
+        "priority": 2,
+        "tone": "进阶",
+        "relatedHotspotIds": null
+      }
+    ],
+    "detailSections": [
+      {
+        "id": "nianhua_01_detail_1",
+        "title": "作品信息",
+        "body": "《喜庆门神》\n年代：清代（约19世纪）\n题材：吉祥寓意年画\n流派：天津杨柳青年画",
+        "references": null
+      },
+      {
+        "id": "nianhua_01_detail_2",
+        "title": "色彩与寓意",
+        "body": "年画色彩以红色为主，红色在传统中国文化中代表吉祥、喜庆和繁荣。朱红色调源于朱砂颜料，具有天然的驱邪避祟功效。画面中的儿童形象寓意多子多福，喜鹊登枝象征喜事临门，整体构图充满吉祥氛围。",
+        "references": ["《中国年画史》", "天津博物馆藏品资料"]
+      },
+      {
+        "id": "nianhua_01_detail_3",
+        "title": "工艺特色",
+        "body": "天津杨柳青年画采用木版水印工艺，先用木版雕刻图案，再用手工彩绘。这样的制作方式使得每幅年画都具有独特的艺术价值，体现了传统手工艺术的精湛技艺。",
+        "references": ["天津工艺美术研究所资料"]
+      }
+    ]
+  },
+  {
+    "id": "nianhua_02_pack",
+    "artworkId": "nianhua_02",
+    "microNotes": [
+      {
+        "id": "nianhua_02_note_1",
+        "text": "门神画像源于汉代，象征守护门户，驱邪避祟。",
+        "priority": 0,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "nianhua_02_note_2",
+        "text": "秦琼和尉迟恭是唐代著名武将，被民间奉为门神。",
+        "priority": 1,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "nianhua_02_note_3",
+        "text": "门神手持兵器姿态威严，体现保卫家园的决心。",
+        "priority": 2,
+        "tone": "进阶",
+        "relatedHotspotIds": null
+      }
+    ],
+    "detailSections": [
+      {
+        "id": "nianhua_02_detail_1",
+        "title": "作品信息",
+        "body": "《秦琼尉迟恭门神》\n年代：清代（约18世纪）\n题材：门神年画\n流派：苏州桃花坞年画",
+        "references": null
+      },
+      {
+        "id": "nianhua_02_detail_2",
+        "title": "门神文化",
+        "body": "门神起源于汉代，最初是桃符，后来演变为神荼、郁垒两位神将。唐代以后，逐渐被秦琼和尉迟恭两位武将取代。秦琼持锏，尉迟恭持鞭，两人威武庄严，象征守护门户，驱邪避祟。",
+        "references": ["《中国民间信仰》", "故宫博物院藏品资料"]
+      },
+      {
+        "id": "nianhua_02_detail_3",
+        "title": "艺术特色",
+        "body": "苏州桃花坞年画以细腻的线条和鲜艳的色彩著称。人物造型夸张生动，脸部表情丰富，展现了民间艺术家的卓越技艺。这样的艺术风格深受百姓喜爱，成为中国年画的重要流派。",
+        "references": ["苏州工艺美术博物馆资料"]
+      }
+    ]
+  },
+  {
+    "id": "nianhua_03_pack",
+    "artworkId": "nianhua_03",
+    "microNotes": [
+      {
+        "id": "nianhua_03_note_1",
+        "text": "鲤鱼跳龙门寓意金榜题名，象征事业成功。",
+        "priority": 0,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "nianhua_03_note_2",
+        "text": "龙门代表成功与荣耀，鲤鱼代表勤奋与坚持。",
+        "priority": 1,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "nianhua_03_note_3",
+        "text": "水波纹装饰体现了中国传统水墨画的写意手法。",
+        "priority": 2,
+        "tone": "进阶",
+        "relatedHotspotIds": null
+      }
+    ],
+    "detailSections": [
+      {
+        "id": "nianhua_03_detail_1",
+        "title": "作品信息",
+        "body": "《鲤鱼跳龙门》\n年代：民国时期（约20世纪初）\n题材：吉祥寓意年画\n流派：山东潍坊年画",
+        "references": null
+      },
+      {
+        "id": "nianhua_03_detail_2",
+        "title": "文化寓意",
+        "body": "鲤鱼跳龙门是流传千年的吉祥图案，源于《三秦记》中的民间传说。鲤鱼历经艰难跳过龙门后化为龙，象征通过科举考试获得成功。画面寓意学业有成、事业顺利，金榜题名。",
+        "references": ["《中国民间故事集》", "山东博物馆藏品资料"]
+      },
+      {
+        "id": "nianhua_03_detail_3",
+        "title": "视觉特点",
+        "body": "山东潍坊年画以粗犷豪放的风格著称。线条简洁有力，色彩对比强烈。水波纹的处理体现了中国传统水墨画的写意手法，简洁中见功力。",
+        "references": ["山东工艺美术研究所资料"]
+      }
+    ]
+  },
+  {
+    "id": "guohua_01_pack",
+    "artworkId": "guohua_01",
+    "microNotes": [
+      {
+        "id": "guohua_01_note_1",
+        "text": "墨分五色，传统山水画讲究墨色的浓淡干湿变化。",
+        "priority": 0,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "guohua_01_note_2",
+        "text": "山石用笔讲究斧劈、披麻等皴法，表现山石质感。",
+        "priority": 1,
+        "tone": "进阶",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "guohua_01_note_3",
+        "text": "留白处理体现了中国画的意境美，言有尽而意无穷。",
+        "priority": 2,
+        "tone": "进阶",
+        "relatedHotspotIds": null
+      }
+    ],
+    "detailSections": [
+      {
+        "id": "guohua_01_detail_1",
+        "title": "作品信息",
+        "body": "《溪山行旅图》\n作者：佚名\n年代：明代（约16世纪）\n题材：山水风景\n流派：浙派山水",
+        "references": null
+      },
+      {
+        "id": "guohua_01_detail_2",
+        "title": "墨法运用",
+        "body": "中国山水画讲究墨分五色：焦、浓、重、淡、清。通过墨色的变化表现山水的层次感和氛围。画面中近景用浓墨，远山用淡墨，营造出深远的空间感。",
+        "references": ["《中国绘画史》", "故宫博物院藏品资料"]
+      },
+      {
+        "id": "guohua_01_detail_3",
+        "title": "皴法技巧",
+        "body": "山石的描绘使用了多种皴法：斧劈皴表现硬朗的山石质感，披麻皴表现柔和的山体结构。这样的笔法体现了画家对自然观察的细腻和技法的娴熟。",
+        "references": ["中国美术学院资料"]
+      }
+    ]
+  },
+  {
+    "id": "guohua_02_pack",
+    "artworkId": "guohua_02",
+    "microNotes": [
+      {
+        "id": "guohua_02_note_1",
+        "text": "梅花象征高洁品格，凌寒开放寓意坚韧不屈。",
+        "priority": 0,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "guohua_02_note_2",
+        "text": "墨梅技法注重笔墨的干湿浓淡，表现梅花神韵。",
+        "priority": 1,
+        "tone": "进阶",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "guohua_02_note_3",
+        "text": "题款体现文人画传统，诗书画印相结合。",
+        "priority": 2,
+        "tone": "进阶",
+        "relatedHotspotIds": null
+      }
+    ],
+    "detailSections": [
+      {
+        "id": "guohua_02_detail_1",
+        "title": "作品信息",
+        "body": "《寒梅图》\n作者：王冕\n年代：元代（约14世纪）\n题材：花卉静物\n流派：元四家风格",
+        "references": null
+      },
+      {
+        "id": "guohua_02_detail_2",
+        "title": "梅花象征",
+        "body": "梅花在传统文化中象征高洁的品格和坚韧的精神。凌寒开放、不畏严寒的特性，被文人墨客赋予人格化的内涵。画面中梅花简洁的线条和墨色的变化，体现了王冕独特的艺术风格。",
+        "references": ["《中国花卉画史》", "上海博物馆藏品资料"]
+      },
+      {
+        "id": "guohua_02_detail_3",
+        "title": "笔墨技法",
+        "body": "墨梅的绘制讲究笔墨的干湿浓淡变化。枝干用中锋，梅花用侧锋，表现不同的质感和韵味。这样的技法要求画家有深厚的笔墨功底和对自然的敏锐观察力。",
+        "references": ["中国美术学院资料"]
+      }
+    ]
+  },
+  {
+    "id": "guohua_03_pack",
+    "artworkId": "guohua_03",
+    "microNotes": [
+      {
+        "id": "guohua_03_note_1",
+        "text": "竹子象征君子品格，虚心有节，坚韧不屈。",
+        "priority": 0,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "guohua_03_note_2",
+        "text": "墨竹技法讲究中锋用笔，表现竹子的质感和风骨。",
+        "priority": 1,
+        "tone": "进阶",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "guohua_03_note_3",
+        "text": "三段式构图体现中国画的章法规律。",
+        "priority": 2,
+        "tone": "进阶",
+        "relatedHotspotIds": null
+      }
+    ],
+    "detailSections": [
+      {
+        "id": "guohua_03_detail_1",
+        "title": "作品信息",
+        "body": "《竹石图》\n作者：郑板桥\n年代：清代（约18世纪）\n题材：花卉静物\n流派：扬州八怪",
+        "references": null
+      },
+      {
+        "id": "guohua_03_detail_2",
+        "title": "竹子寓意",
+        "body": "竹子在传统文化中被视为君子的象征，具有虚心、有节、坚韧的品格。郑板桥的墨竹画作中，常题写'竹石为友'的诗句，表达了画家对高洁品格的追求和对自然的亲近。",
+        "references": ["《郑板桥全集》", "扬州博物馆藏品资料"]
+      },
+      {
+        "id": "guohua_03_detail_3",
+        "title": "艺术特色",
+        "body": "郑板桥的竹石画以简洁有力的线条著称。竹叶用草书法写成，石块用淡墨渲染，整体风格清新自然。这样的构图体现了中国画'留白'的艺术美学。",
+        "references": ["扬州美术馆资料"]
+      }
+    ]
+  },
+  {
+    "id": "lianpu_01_pack",
+    "artworkId": "lianpu_01",
+    "microNotes": [
+      {
+        "id": "lianpu_01_note_1",
+        "text": "京剧脸谱是角色性格的视觉化表达，不同颜色代表不同性格。",
+        "priority": 0,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "lianpu_01_note_2",
+        "text": "红色脸谱通常代表忠勇正直的人物，如关羽。",
+        "priority": 1,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "lianpu_01_note_3",
+        "text": "脸谱图案的线条和装饰体现了京剧表演的艺术韵味。",
+        "priority": 2,
+        "tone": "进阶",
+        "relatedHotspotIds": null
+      }
+    ],
+    "detailSections": [
+      {
+        "id": "lianpu_01_detail_1",
+        "title": "作品信息",
+        "body": "《关云长脸谱》\n年代：清代（约19世纪）\n题材：京剧人物脸谱\n流派：北京京剧脸谱",
+        "references": null
+      },
+      {
+        "id": "lianpu_01_detail_2",
+        "title": "脸谱色彩",
+        "body": "京剧脸谱以色彩表达人物性格：红色代表忠勇正直，黑色代表刚直公正，白色代表阴险奸诈，金色代表神圣庄严。关羽的脸谱为红色，体现了他的忠义精神和英雄气概。",
+        "references": ["《京剧脸谱艺术》", "中国戏曲研究院资料"]
+      },
+      {
+        "id": "lianpu_01_detail_3",
+        "title": "艺术特色",
+        "body": "京剧脸谱不仅是化妆技术，更是书法和绘画的艺术形式。图案的设计融合了书法线条的美感和装饰艺术的韵味，展现了中华民族独特的审美观念。",
+        "references": ["北京京剧院资料"]
+      }
+    ]
+  },
+  {
+    "id": "lianpu_02_pack",
+    "artworkId": "lianpu_02",
+    "microNotes": [
+      {
+        "id": "lianpu_02_note_1",
+        "text": "包公脸谱为黑色，象征刚正不阿、清正廉明。",
+        "priority": 0,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "lianpu_02_note_2",
+        "text": "黑色脸谱代表铁面无私、执法如山的人物性格。",
+        "priority": 1,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "lianpu_02_note_3",
+        "text": "脸谱上的图案和纹饰蕴含着丰富的象征意义。",
+        "priority": 2,
+        "tone": "进阶",
+        "relatedHotspotIds": null
+      }
+    ],
+    "detailSections": [
+      {
+        "id": "lianpu_02_detail_1",
+        "title": "作品信息",
+        "body": "《包公脸谱》\n年代：清代（约18世纪）\n题材：京剧人物脸谱\n流派：河北梆子脸谱",
+        "references": null
+      },
+      {
+        "id": "lianpu_02_detail_2",
+        "title": "包公形象",
+        "body": "包公（包拯）是中国历史上著名的清官形象，以铁面无私著称。京剧中的包公脸谱为黑色，象征刚正不阿、清正廉明。这样的色彩选择体现了民间对清官的崇敬和对正义的追求。",
+        "references": ["《包公传说》", "中国戏曲博物馆资料"]
+      },
+      {
+        "id": "lianpu_02_detail_3",
+        "title": "脸谱演变",
+        "body": "包公脸谱从最初的简单黑色发展到今天复杂的图案，反映了戏曲艺术的演变过程。脸谱不仅是演员的化妆，更是角色性格的艺术表达。",
+        "references": ["河北戏曲研究所资料"]
+      }
+    ]
+  },
+  {
+    "id": "lianpu_03_pack",
+    "artworkId": "lianpu_03",
+    "microNotes": [
+      {
+        "id": "lianpu_03_note_1",
+        "text": "曹操脸谱为白色，代表阴险奸诈的性格特征。",
+        "priority": 0,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "lianpu_03_note_2",
+        "text": "白色脸谱在京剧中多用于反面角色或性格复杂的人物。",
+        "priority": 1,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "lianpu_03_note_3",
+        "text": "脸谱的精细线条体现了京剧化妆技艺的高超水平。",
+        "priority": 2,
+        "tone": "进阶",
+        "relatedHotspotIds": null
+      }
+    ],
+    "detailSections": [
+      {
+        "id": "lianpu_03_detail_1",
+        "title": "作品信息",
+        "body": "《曹操脸谱》\n年代：清代（约19世纪）\n题材：京剧人物脸谱\n流派：徽班京剧脸谱",
+        "references": null
+      },
+      {
+        "id": "lianpu_03_detail_2",
+        "title": "曹操形象",
+        "body": "曹操在京剧中多为反面角色，其脸谱为白色，象征阴险奸诈的性格。在《群英会》、《华容道》等剧目中，曹操的白色脸谱与其复杂多变的性格相得益彰。",
+        "references": ["《三国演义》戏曲改编", "上海京剧院资料"]
+      },
+      {
+        "id": "lianpu_03_detail_3",
+        "title": "化妆艺术",
+        "body": "京剧脸谱的绘制需要极高的技巧，演员需要在短时间内完成复杂的图案。白色脸谱的基础是冷粉调制的白色颜料，干燥后才能在上面绘制细致的纹饰。",
+        "references": ["中国戏曲学院资料"]
+      }
+    ]
+  },
+  {
+    "id": "dunhuang_01_pack",
+    "artworkId": "dunhuang_01",
+    "microNotes": [
+      {
+        "id": "dunhuang_01_note_1",
+        "text": "敦煌壁画体现了盛唐时期繁荣的宗教艺术。",
+        "priority": 0,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "dunhuang_01_note_2",
+        "text": "飞天形象代表佛教中的神灵，姿态优美充满动感。",
+        "priority": 1,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "dunhuang_01_note_3",
+        "text": "线条流畅的线描技法展现了古代画家的精湛技艺。",
+        "priority": 2,
+        "tone": "进阶",
+        "relatedHotspotIds": null
+      }
+    ],
+    "detailSections": [
+      {
+        "id": "dunhuang_01_detail_1",
+        "title": "作品信息",
+        "body": "《飞天伎乐图》\n年代：唐代（约8世纪）\n题材：佛教艺术\n地点：莫高窟第45窟",
+        "references": null
+      },
+      {
+        "id": "dunhuang_01_detail_2",
+        "title": "飞天形象",
+        "body": "飞天是敦煌壁画中最具代表性的艺术形象之一，源于印度佛教艺术，在中国得到了独特的发展。飞天姿态优美，衣带飘扬，体现了古人对自由和神圣的向往。",
+        "references": ["《敦煌艺术总论》", "敦煌研究院资料"]
+      },
+      {
+        "id": "dunhuang_01_detail_3",
+        "title": "艺术风格",
+        "body": "盛唐时期的敦煌壁画以线条流畅、色彩鲜艳著称。画家运用线描和没骨技法，结合中原和西域的艺术特色，创造出独特的敦煌艺术风格。",
+        "references": ["敦煌艺术研究所资料"]
+      }
+    ]
+  },
+  {
+    "id": "dunhuang_02_pack",
+    "artworkId": "dunhuang_02",
+    "microNotes": [
+      {
+        "id": "dunhuang_02_note_1",
+        "text": "供养人形象体现了古代社会的宗教信仰和财富积累。",
+        "priority": 0,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "dunhuang_02_note_2",
+        "text": "壁画中的人物服饰反映了唐代社会各阶层的服装特点。",
+        "priority": 1,
+        "tone": "进阶",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "dunhuang_02_note_3",
+        "text": "细腻的设色技法展现了古代绘画材料的高超工艺。",
+        "priority": 2,
+        "tone": "进阶",
+        "relatedHotspotIds": null
+      }
+    ],
+    "detailSections": [
+      {
+        "id": "dunhuang_02_detail_1",
+        "title": "作品信息",
+        "body": "《供养人图》\n年代：唐代（约9世纪）\n题材：宗教供养\n地点：莫高窟第156窟",
+        "references": null
+      },
+      {
+        "id": "dunhuang_02_detail_2",
+        "title": "供养文化",
+        "body": "供养人是为寺庙捐赠财物的人，他们在壁画中留下形象以示虔诚。这样的习俗反映了唐代社会宗教信仰的普遍性和财富的集中程度。",
+        "references": ["《敦煌石窟全集》", "敦煌研究院资料"]
+      },
+      {
+        "id": "dunhuang_02_detail_3",
+        "title": "绘画技艺",
+        "body": "敦煌壁画使用矿物颜料，经过复杂的制作工艺。朱砂、赭石、石青等颜料经研磨后混合胶水使用，色彩鲜艳持久，体现了古代绘画材料的先进水平。",
+        "references": ["中国美术学院资料"]
+      }
+    ]
+  },
+  {
+    "id": "dunhuang_03_pack",
+    "artworkId": "dunhuang_03",
+    "microNotes": [
+      {
+        "id": "dunhuang_03_note_1",
+        "text": "经变故事画是敦煌壁画的重要题材，讲述佛教经典。",
+        "priority": 0,
+        "tone": "入门",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "dunhuang_03_note_2",
+        "text": "画面布局严谨，人物众多却层次分明。",
+        "priority": 1,
+        "tone": "进阶",
+        "relatedHotspotIds": null
+      },
+      {
+        "id": "dunhuang_03_note_3",
+        "text": "线条细腻流畅，展现了古代画家的卓越技巧。",
+        "priority": 2,
+        "tone": "进阶",
+        "relatedHotspotIds": null
+      }
+    ],
+    "detailSections": [
+      {
+        "id": "dunhuang_03_detail_1",
+        "title": "作品信息",
+        "body": "《维摩诘经变图》\n年代：唐代（约8世纪）\n题材：佛教经变\n地点：莫高窟第103窟",
+        "references": null
+      },
+      {
+        "id": "dunhuang_03_detail_2",
+        "title": "经变艺术",
+        "body": "经变是将佛教经典故事以图画形式表现的艺术形式。这种艺术形式将文字和图像相结合，帮助信徒更好地理解佛教教义，具有重要的宗教教育意义。",
+        "references": ["《维摩诘经》", "敦煌研究院资料"]
+      },
+      {
+        "id": "dunhuang_03_detail_3",
+        "title": "构图特点",
+        "body": "经变画的构图通常采用分栏式布局，主尊居中，胁侍分列两侧，故事场景环绕四周。这样的布局既体现了佛教的等级观念，也展现了画家的高超构图技巧。",
+        "references": ["中国美术史研究资料"]
+      }
+    ]
+  }
+]

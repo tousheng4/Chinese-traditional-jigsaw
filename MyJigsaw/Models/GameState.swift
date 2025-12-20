@@ -263,6 +263,10 @@ class GameState {
         if distToTarget <= epsilon {
             puzzlePieces[index].currentPosition = piece.targetPosition
             puzzlePieces[index].isLocked = true
+
+            // 播放拼图正确吸附音效
+            SoundManager.shared.playJigsawSound()
+
             checkGameCompletion()
             draggingPieceId = nil
             draggingStartCenter = nil
@@ -286,7 +290,7 @@ class GameState {
             // 游戏完成时立即保存进度
             if let level = currentLevel {
                 PersistenceManager.shared.saveGameProgress(
-                    levelId: level.id,
+                    levelStableId: level.stableId,
                     isCompleted: true,
                     time: elapsedTime,
                     moves: moveCount

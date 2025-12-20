@@ -45,6 +45,14 @@ struct ContentView: View {
             // 应用启动时评估所有成就状态
             achievementCenter.evaluateAllAchievements()
 
+            // 调试：检查持久化数据
+            //let persistenceManager = PersistenceManager.shared
+            //let allProgress = persistenceManager.getAllProgress()
+            //print("🚀 应用启动 - 已加载关卡进度: \(allProgress.count) 条记录")
+            // for progress in allProgress where progress.isCompleted {
+            //     print("   ✅ 关卡 \(progress.levelStableId) 已完成")
+            // }
+
             // 3秒后跳转
             DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                 withAnimation {
@@ -54,6 +62,9 @@ struct ContentView: View {
         }
         .onChange(of: achievementCenter.newlyUnlockedAchievement) { oldValue, newValue in
             if newValue != nil {
+                // 播放成就解锁音效
+                SoundManager.shared.playAchievementSound()
+
                 withAnimation {
                     showingAchievementUnlock = true
                 }

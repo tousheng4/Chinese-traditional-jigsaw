@@ -16,6 +16,7 @@ class SettingsManager: ObservableObject {
     @Published var appSettings: AppSettings {
         didSet {
             saveSettings()
+            updateSoundManager()
         }
     }
     
@@ -29,6 +30,7 @@ class SettingsManager: ObservableObject {
     
     private init() {
         self.appSettings = Self.loadSettings()
+        updateSoundManager()
     }
     
     // MARK: - Settings Management
@@ -44,6 +46,10 @@ class SettingsManager: ObservableObject {
         if let data = try? encoder.encode(appSettings) {
             userDefaults.set(data, forKey: Keys.appSettings)
         }
+    }
+
+    private func updateSoundManager() {
+        SoundManager.shared.setSoundEnabled(appSettings.soundEnabled)
     }
     
     // MARK: - Convenience Methods

@@ -22,6 +22,17 @@ struct PuzzleGameView: View {
     @State private var ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     @State private var activeDragPieceId: UUID?
     @State private var cachedUGCBoardImage: UIImage?
+
+    // 微注释相关
+    private var microAnnotationPack: MicroAnnotationPack? {
+        contentManager.getMicroAnnotationPack(for: level)
+    }
+
+    private var isFirstCompletion: Bool {
+        let progress = PersistenceManager.shared.getGameProgress(forStableId: level.stableId)
+        // 如果之前没有完成过，则为首次完成
+        return !progress.isCompleted
+    }
     
     var body: some View {
         GeometryReader { geometry in
@@ -55,8 +66,12 @@ struct PuzzleGameView: View {
                 if puzzleEngine.gameState.isGameCompleted {
                     Color.traditional.ink.opacity(0.7)
                         .ignoresSafeArea()
-                    
+
                     completionScreen
+                        .onAppear {
+                            // 恭喜界面出现时播放成功音效
+                            SoundManager.shared.playSucceedSound()
+                        }
                 }
             }
             // 预热UGC棋盘图缓存：确保开始页也能尽快拿到图（同时提升进入游戏后的流畅度）
@@ -386,9 +401,9 @@ struct PuzzleGameView: View {
     private var completionScreen: some View {
         VStack(spacing: 30) {
             // Success icon
-            Image(systemName: "seal.fill")
-                .font(.system(size: 80))
-                .foregroundColor(.traditional.vermilion)
+            // Image(systemName: "seal.fill")
+            //     .font(.system(size: 80))
+            //     .foregroundColor(.traditional.vermilion)
             
             // Completion message
             VStack(spacing: 16) {
@@ -427,7 +442,13 @@ struct PuzzleGameView: View {
             }
             .traditionalCard()
             .padding(.horizontal, 40)
-            
+
+            // 微注释卡片
+            if let annotationPack = microAnnotationPack {
+                MicroAnnotationCard(annotationPack: annotationPack, isFirstCompletion: isFirstCompletion)
+                    .padding(.horizontal, 40)
+            }
+
             // Buttons
             VStack(spacing: 16) {
                 // 分享按钮

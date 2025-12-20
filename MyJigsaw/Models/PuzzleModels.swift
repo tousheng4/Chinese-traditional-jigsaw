@@ -38,8 +38,10 @@ struct PuzzleLevel: Identifiable, Codable {
     var isLocked: Bool
     /// 是否计入模块成就（默认true）
     let countsForModuleAchievement: Bool
+    /// 稳定的关卡标识符，用于持久化匹配
+    let stableId: String
 
-    init(id: UUID = UUID(), categoryId: UUID, title: String, previewImageName: String, sourceInfo: String, gridSize: Int, difficulty: PuzzleDifficulty, isLocked: Bool = true, countsForModuleAchievement: Bool = true) {
+    init(id: UUID = UUID(), categoryId: UUID, title: String, previewImageName: String, sourceInfo: String, gridSize: Int, difficulty: PuzzleDifficulty, isLocked: Bool = true, countsForModuleAchievement: Bool = true, stableId: String? = nil) {
         self.id = id
         self.categoryId = categoryId
         self.title = title
@@ -49,6 +51,8 @@ struct PuzzleLevel: Identifiable, Codable {
         self.difficulty = difficulty
         self.isLocked = isLocked
         self.countsForModuleAchievement = countsForModuleAchievement
+        // 如果没有提供稳定的ID，则使用categoryId和difficulty的组合
+        self.stableId = stableId ?? "\(categoryId.uuidString)_\(difficulty.rawValue)"
     }
 }
 
@@ -94,15 +98,26 @@ struct PuzzlePiece: Identifiable, Codable {
 // MARK: - Puzzle Progress
 struct PuzzleProgress: Identifiable, Codable {
     let id: UUID
-    let levelId: UUID
+    /// 使用稳定的关卡标识符而不是UUID
+    let levelStableId: String
     var isCompleted: Bool
     var bestTime: TimeInterval? // in seconds
     var bestMoves: Int?
     var lastPlayedAt: Date
-    
-    init(id: UUID = UUID(), levelId: UUID, isCompleted: Bool = false, bestTime: TimeInterval? = nil, bestMoves: Int? = nil, lastPlayedAt: Date = Date()) {
+
+    init(id: UUID = UUID(), levelStableId: String, isCompleted: Bool = false, bestTime: TimeInterval? = nil, bestMoves: Int? = nil, lastPlayedAt: Date = Date()) {
         self.id = id
-        self.levelId = levelId
+        self.levelStableId = levelStableId
+        self.isCompleted = isCompleted
+        self.bestTime = bestTime
+        self.bestMoves = bestMoves
+        self.lastPlayedAt = lastPlayedAt
+    }
+
+    // 兼容性构造函数，从levelId转换
+    init(from levelId: UUID, isCompleted: Bool = false, bestTime: TimeInterval? = nil, bestMoves: Int? = nil, lastPlayedAt: Date = Date()) {
+        self.id = UUID()
+        self.levelStableId = levelId.uuidString // 临时兼容
         self.isCompleted = isCompleted
         self.bestTime = bestTime
         self.bestMoves = bestMoves
@@ -151,6 +166,8 @@ struct UGCPuzzle: Identifiable, Codable {
 
     // 转换为PuzzleLevel以便在游戏中使用
     func toPuzzleLevel() -> PuzzleLevel {
+        let stableId = "ugc_\(id.uuidString)" // UGC关卡使用固定标识符
+
         return PuzzleLevel(
             id: id, // 关键：UGC关卡必须使用固定id，否则无法映射到缩略图/主图/进度
             categoryId: UGCManager.ugcCategoryId,
@@ -160,7 +177,8 @@ struct UGCPuzzle: Identifiable, Codable {
             gridSize: config.gridSize,
             difficulty: config.difficulty,
             isLocked: false,
-            countsForModuleAchievement: false // 自制关卡不计入成就
+            countsForModuleAchievement: false, // 自制关卡不计入成就
+            stableId: stableId
         )
     }
 }
@@ -249,4 +267,44 @@ struct UGCProgress: Identifiable, Codable {
         self.bestMoves = bestMoves
         self.lastPlayedAt = lastPlayedAt
     }
+}
+
+// MARK: - Micro Annotation Models
+/// 微注释包 - 对应一个作品的完整注释信息
+struct MicroAnnotationPack: Identifiable, Codable {
+    let id: String // 通常与作品ID相同
+    let artworkId: String
+    let microNotes: [MicroNote]
+    let detailSections: [DetailSection]
+
+    var primaryNote: MicroNote? {
+        microNotes.filter { $0.priority == 0 }.first ?? microNotes.first
+    }
+
+    var secondaryNote: MicroNote? {
+        let nonPrimaryNotes = microNotes.filter { $0.priority != 0 }
+        return nonPrimaryNotes.randomElement()
+    }
+}
+
+/// 微注释 - 简短的知识点提示
+struct MicroNote: Identifiable, Codable {
+    let id: String
+    let text: String // 18-34 字的简短注释
+    let priority: Int // 0=最重要的，1=次要的，2=辅助的
+    let tone: NoteTone? // 入门/进阶
+    let relatedHotspotIds: [String]? // 关联的画面热点ID（预留）
+
+    enum NoteTone: String, Codable {
+        case beginner = "入门"
+        case advanced = "进阶"
+    }
+}
+
+/// 详情段落 - 扩展页的完整内容
+struct DetailSection: Identifiable, Codable {
+    let id: String
+    let title: String
+    let body: String
+    let references: [String]? // 可选的参考资料
 }

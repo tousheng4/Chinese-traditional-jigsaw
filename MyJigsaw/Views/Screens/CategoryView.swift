@@ -168,7 +168,7 @@ struct UGCLevelCard: View {
     @State private var showDeleteAlert = false
 
     private var progress: PuzzleProgress {
-        persistenceManager.getGameProgress(for: level.id)
+        persistenceManager.getGameProgress(forStableId: level.stableId)
     }
 
     var body: some View {
@@ -266,9 +266,9 @@ struct UGCLevelCard: View {
 struct LevelCard: View {
     let level: PuzzleLevel
     @ObservedObject private var persistenceManager = PersistenceManager.shared
-    
+
     private var progress: PuzzleProgress {
-        persistenceManager.getGameProgress(for: level.id)
+        persistenceManager.getGameProgress(forStableId: level.stableId)
     }
     
     var body: some View {
