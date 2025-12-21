@@ -521,125 +521,47 @@ struct PuzzleGameView: View {
 
     private func shareCompletion() {
         // 生成分享图片
-        let shareImage = generateShareImage()
-        let activityVC = UIActivityViewController(activityItems: [shareImage], applicationActivities: nil)
+        DispatchQueue.main.async {
+            let shareImage = generateShareImage()
+            let activityVC = UIActivityViewController(activityItems: [shareImage], applicationActivities: nil)
 
-        // 在iPad上设置弹窗位置
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first {
-            activityVC.popoverPresentationController?.sourceView = window
-            activityVC.popoverPresentationController?.sourceRect = CGRect(x: window.bounds.midX, y: window.bounds.midY, width: 0, height: 0)
-        }
+            // 在iPad上设置弹窗位置
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = windowScene.windows.first {
+                activityVC.popoverPresentationController?.sourceView = window
+                activityVC.popoverPresentationController?.sourceRect = CGRect(x: window.bounds.midX, y: window.bounds.midY, width: 0, height: 0)
+            }
 
-        // 获取当前ViewController并显示分享界面
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first,
-           let rootVC = window.rootViewController {
-            rootVC.present(activityVC, animated: true)
+            // 获取当前ViewController并显示分享界面
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = windowScene.windows.first,
+               let rootVC = window.rootViewController {
+                rootVC.present(activityVC, animated: true)
+            }
         }
     }
 
+    @MainActor
     private func generateShareImage() -> UIImage {
-        let imageSize = CGSize(width: 600, height: 800)
-        let renderer = UIGraphicsImageRenderer(size: imageSize)
-
-        return renderer.image { context in
-            // 背景
-            UIColor.white.setFill()
-            context.fill(CGRect(origin: .zero, size: imageSize))
-
-            // 绘制拼图原图（如果有的话）
-            if let ugcPuzzle = contentManager.getUGCPuzzle(for: level.id),
-               let puzzleImage = UGCManager.shared.getImage(for: ugcPuzzle) {
-                let imageRect = CGRect(x: 50, y: 50, width: 500, height: 400)
-                puzzleImage.draw(in: imageRect)
-            } else {
-                // 默认图片
-                let placeholderRect = CGRect(x: 50, y: 50, width: 500, height: 400)
-                UIColor.systemGray5.setFill()
-                context.fill(placeholderRect)
-
-                // 绘制占位符文字
-                let placeholderText = "拼图完成"
-                let font = UIFont.systemFont(ofSize: 48, weight: .bold)
-                let textColor = UIColor.systemGray
-                let textAttributes: [NSAttributedString.Key: Any] = [
-                    .font: font,
-                    .foregroundColor: textColor
-                ]
-
-                let textSize = placeholderText.size(withAttributes: textAttributes)
-                let textRect = CGRect(
-                    x: placeholderRect.midX - textSize.width / 2,
-                    y: placeholderRect.midY - textSize.height / 2,
-                    width: textSize.width,
-                    height: textSize.height
-                )
-
-                placeholderText.draw(in: textRect, withAttributes: textAttributes)
-            }
-
-            // 绘制完成信息
-            let titleText = "🎉 拼图完成！"
-            let titleFont = UIFont.systemFont(ofSize: 32, weight: .bold)
-            let titleColor = UIColor.systemRed
-            let titleAttributes: [NSAttributedString.Key: Any] = [
-                .font: titleFont,
-                .foregroundColor: titleColor
-            ]
-
-            let titleSize = titleText.size(withAttributes: titleAttributes)
-            let titleRect = CGRect(x: 50, y: 480, width: titleSize.width, height: titleSize.height)
-            titleText.draw(in: titleRect, withAttributes: titleAttributes)
-
-            // 绘制关卡信息
-            let levelText = "关卡: \(level.title)"
-            let levelFont = UIFont.systemFont(ofSize: 24)
-            let levelAttributes: [NSAttributedString.Key: Any] = [
-                .font: levelFont,
-                .foregroundColor: UIColor.darkGray
-            ]
-
-            let levelSize = levelText.size(withAttributes: levelAttributes)
-            let levelRect = CGRect(x: 50, y: 530, width: levelSize.width, height: levelSize.height)
-            levelText.draw(in: levelRect, withAttributes: levelAttributes)
-
-            // 绘制统计信息
-            let movesText = "步数: \(puzzleEngine.gameState.moveCount)"
-            let movesFont = UIFont.systemFont(ofSize: 20)
-            let movesAttributes: [NSAttributedString.Key: Any] = [
-                .font: movesFont,
-                .foregroundColor: UIColor.gray
-            ]
-
-            let movesSize = movesText.size(withAttributes: movesAttributes)
-            let movesRect = CGRect(x: 50, y: 570, width: movesSize.width, height: movesSize.height)
-            movesText.draw(in: movesRect, withAttributes: movesAttributes)
-
-            if settingsManager.appSettings.timerEnabled {
-                let timeText = "时间: \(formatTime(puzzleEngine.gameState.elapsedTime))"
-                let timeSize = timeText.size(withAttributes: movesAttributes)
-                let timeRect = CGRect(x: 50, y: 600, width: timeSize.width, height: timeSize.height)
-                timeText.draw(in: timeRect, withAttributes: movesAttributes)
-            }
-
-            // 绘制水印
-            let watermarkText = "传统文化拼图"
-            let watermarkFont = UIFont.systemFont(ofSize: 16)
-            let watermarkAttributes: [NSAttributedString.Key: Any] = [
-                .font: watermarkFont,
-                .foregroundColor: UIColor.lightGray
-            ]
-
-            let watermarkSize = watermarkText.size(withAttributes: watermarkAttributes)
-            let watermarkRect = CGRect(
-                x: imageSize.width - watermarkSize.width - 20,
-                y: imageSize.height - watermarkSize.height - 20,
-                width: watermarkSize.width,
-                height: watermarkSize.height
-            )
-            watermarkText.draw(in: watermarkRect, withAttributes: watermarkAttributes)
+        let puzzleImage: UIImage?
+        if let ugcPuzzle = contentManager.getUGCPuzzle(for: level.id) {
+            puzzleImage = ugcManager.getImage(for: ugcPuzzle)
+        } else {
+            puzzleImage = UIImage(named: level.previewImageName)
         }
+
+        let shareView = ShareResultView(
+            level: level,
+            moveCount: puzzleEngine.gameState.moveCount,
+            elapsedTime: puzzleEngine.gameState.elapsedTime,
+            puzzleImage: puzzleImage
+        )
+
+        let renderer = ImageRenderer(content: shareView)
+        // 设置 renderer 的 scale 为当前显示缩放，保证清晰度
+        renderer.scale = displayScale
+        
+        return renderer.uiImage ?? UIImage()
     }
 
     private func updateCachedUGCBoardImage(boardSize: CGFloat) {
@@ -678,6 +600,173 @@ struct PuzzleGameView: View {
         case .hard:
             return .red
         }
+    }
+}
+
+// MARK: - Share Image Design
+struct ShareResultView: View {
+    let level: PuzzleLevel
+    let moveCount: Int
+    let elapsedTime: TimeInterval
+    let puzzleImage: UIImage?
+    
+    private var formattedTime: String {
+        let minutes = Int(elapsedTime) / 60
+        let seconds = Int(elapsedTime) % 60
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header: Title and Date
+            VStack(spacing: 8) {
+                Text(level.title)
+                    .font(.qianTuBiFeng(size: 36))
+                    .foregroundColor(.traditional.ink)
+                
+                Text(Date().formatted(date: .long, time: .omitted))
+                    .font(.qianTuBiFeng(size: 14))
+                    .foregroundColor(.traditional.ink.opacity(0.6))
+            }
+            .padding(.top, 40)
+            .padding(.bottom, 20)
+            
+            // Main Content: Puzzle Image
+            ZStack {
+                // Image Frame
+                Rectangle()
+                    .fill(Color.traditional.paper)
+                    .overlay(
+                        Rectangle()
+                            .stroke(Color.traditional.ocher, lineWidth: 2)
+                            .padding(4)
+                            .overlay(
+                                Rectangle()
+                                    .stroke(Color.traditional.ocher.opacity(0.5), lineWidth: 1)
+                            )
+                    )
+                
+                if let image = puzzleImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .padding(15)
+                } else {
+                    Rectangle()
+                        .fill(Color.traditional.lightGray)
+                        .overlay(
+                            Text("拼图已成")
+                                .font(.qianTuBiFeng(size: 24))
+                                .foregroundColor(.traditional.ink.opacity(0.3))
+                        )
+                        .padding(15)
+                }
+                
+                // Seal (朱红印章)
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        SealView(text: "大成")
+                            .offset(x: -10, y: -10)
+                    }
+                }
+            }
+            .frame(width: 300, height: 300)
+            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+            .padding(.horizontal, 40)
+            
+            // Stats
+            HStack(spacing: 40) {
+                VStack(alignment: .center, spacing: 4) {
+                    Text("步数")
+                        .font(.qianTuBiFeng(size: 14))
+                        .foregroundColor(.traditional.ink.opacity(0.6))
+                    Text("\(moveCount)")
+                        .font(.qianTuBiFeng(size: 24))
+                        .foregroundColor(.traditional.ink)
+                }
+                
+                VStack(alignment: .center, spacing: 4) {
+                    Text("历时")
+                        .font(.qianTuBiFeng(size: 14))
+                        .foregroundColor(.traditional.ink.opacity(0.6))
+                    Text(formattedTime)
+                        .font(.qianTuBiFeng(size: 24))
+                        .foregroundColor(.traditional.ink)
+                }
+            }
+            .padding(.top, 30)
+            
+            Spacer()
+            
+            // Footer: App Info
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("拾珍拼图")
+                        .font(.qianTuBiFeng(size: 18))
+                        .foregroundColor(.traditional.vermilion)
+                    Text("传统文化，指尖留存")
+                        .font(.qianTuBiFeng(size: 10))
+                        .foregroundColor(.traditional.ink.opacity(0.4))
+                }
+                Spacer()
+                // Fake QR Code box
+                Rectangle()
+                    .stroke(Color.traditional.ink.opacity(0.2), lineWidth: 1)
+                    .frame(width: 40, height: 40)
+                    .overlay(
+                        Image(systemName: "qrcode")
+                            .font(.system(size: 30))
+                            .foregroundColor(.traditional.ink.opacity(0.2))
+                    )
+            }
+            .padding(.horizontal, 40)
+            .padding(.bottom, 40)
+        }
+        .frame(width: 400, height: 600) // Fixed size for the share image
+        .background(
+            ZStack {
+                Color.traditional.paper
+                // Traditional pattern or texture could go here
+                Image(systemName: "circle.grid.3x3.fill")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .opacity(0.02)
+                    .foregroundColor(.traditional.ocher)
+            }
+        )
+        .overlay(
+            Rectangle()
+                .stroke(Color.traditional.ocher, lineWidth: 10)
+                .padding(5)
+                .overlay(
+                    Rectangle()
+                        .stroke(Color.traditional.ocher.opacity(0.5), lineWidth: 1)
+                        .padding(12)
+                )
+        )
+    }
+}
+
+struct SealView: View {
+    let text: String
+    
+    var body: some View {
+        Text(text)
+            .font(.qianTuBiFeng(size: 14))
+            .foregroundColor(.white)
+            .padding(4)
+            .background(
+                Rectangle()
+                    .fill(Color.traditional.vermilion)
+                    .overlay(
+                        Rectangle()
+                            .stroke(Color.white.opacity(0.8), lineWidth: 1)
+                            .padding(1)
+                    )
+            )
+            .rotationEffect(.degrees(-5))
     }
 }
 
