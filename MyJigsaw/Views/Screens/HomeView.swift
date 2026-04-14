@@ -62,10 +62,10 @@ struct HomeView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.traditional.vermilion)
             
-            Text("传统文化拼图")
+            Text("拼筑华夏")
                 .traditionalTitle()
             
-            Text("在指尖的拆解与复原之间，完成一次与经典图像的温柔相遇")
+            Text("在指尖之间，重筑华夏建筑之美")
                 .traditionalSubheadline()
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
@@ -133,14 +133,14 @@ struct CategoryCard: View {
     
     private var categoryNameIcon: String {
         switch category.title {
-        case "传统年画":
-            return "paintbrush.fill"
-        case "京剧脸谱":
-            return "theatermasks.fill"
-        case "敦煌壁画":
-            return "photo.artframe"
-        case "国画":
-            return "paintpalette.fill"
+        case "民居":
+            return "house.fill"
+        case "官府":
+            return "building.columns.fill"
+        case "皇宫":
+            return "crown.fill"
+        case "桥梁":
+            return "road.lanes"
         default:
             return "photo.fill"
         }

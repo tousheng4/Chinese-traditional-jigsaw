@@ -28,39 +28,25 @@ class SoundManager {
             print("❌ 设置音频会话失败: \(error.localizedDescription)")
         }
 
-        // 加载音频文件
-        loadSound(fileName: "jigsaw sound.mp3", forKey: "jigsaw")
-        loadSound(fileName: "succeed.mp3", forKey: "succeed")
-        loadSound(fileName: "achievement.mp3", forKey: "achievement")
+        // 从 Assets.xcassets 的 .dataset 加载音频
+        loadSound(assetName: "jigsaw sound", forKey: "jigsaw")
+        loadSound(assetName: "succeed", forKey: "succeed")
+        loadSound(assetName: "achievement", forKey: "achievement")
     }
 
-    private func loadSound(fileName: String, forKey key: String) {
-        // 从主bundle加载音频文件
-        let name = (fileName as NSString).deletingPathExtension
-        let ext = (fileName as NSString).pathExtension
-
-        guard let url = Bundle.main.url(forResource: name, withExtension: ext) else {
-            print("❌ 找不到音频文件: \(fileName)")
-            print("   搜索路径: \(Bundle.main.bundlePath)")
-
-            // 列出bundle中的所有mp3文件用于调试
-            if let bundlePath = Bundle.main.resourcePath {
-                let fm = FileManager.default
-                if let files = try? fm.contentsOfDirectory(atPath: bundlePath) {
-                    let mp3Files = files.filter { $0.hasSuffix(".mp3") }
-                    print("   Bundle中的MP3文件: \(mp3Files)")
-                }
-            }
+    private func loadSound(assetName: String, forKey key: String) {
+        guard let asset = NSDataAsset(name: assetName) else {
+            print("❌ 找不到音频资产: \(assetName)")
             return
         }
 
         do {
-            let player = try AVAudioPlayer(contentsOf: url)
+            let player = try AVAudioPlayer(data: asset.data)
             player.prepareToPlay()
             audioPlayers[key] = player
-            print("✅ 成功加载音频: \(fileName)")
+            print("✅ 成功加载音频: \(assetName)")
         } catch {
-            print("❌ 加载音频失败 \(fileName): \(error.localizedDescription)")
+            print("❌ 加载音频失败 \(assetName): \(error.localizedDescription)")
         }
     }
 

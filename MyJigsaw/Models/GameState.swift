@@ -287,15 +287,15 @@ class GameState {
                 elapsedTime = Date().timeIntervalSince(startTime)
             }
 
-            // 游戏完成时立即保存进度
-            if let level = currentLevel {
-                PersistenceManager.shared.saveGameProgress(
-                    levelStableId: level.stableId,
-                    isCompleted: true,
-                    time: elapsedTime,
-                    moves: moveCount
-                )
-            }
+        // 游戏完成时立即保存进度
+        if let level = currentLevel {
+            PersistenceManager.shared.saveGameProgress(
+                levelStableId: level.stableId,
+                isCompleted: true,
+                time: elapsedTime,
+                moves: moveCount
+            )
+        }
         }
     }
     

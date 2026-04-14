@@ -29,27 +29,27 @@ class ContentManager: ObservableObject {
         // Create categories
         categories = [
             PuzzleCategory(
-                title: "传统年画",
-                description: "吉祥寓意、节俗叙事的传统年画拼图",
-                coverImageName: "category_nianhua",
+                title: "民居",
+                description: "青砖黛瓦、粉墙飞檐的传统民居建筑拼图",
+                coverImageName: "category_minju",
                 sortOrder: 1
             ),
             PuzzleCategory(
-                title: "京剧脸谱",
-                description: "角色谱系、色彩象征的京剧脸谱拼图",
-                coverImageName: "category_lianpu",
+                title: "官府",
+                description: "庄严肃穆、规制方正的传统官府衙门拼图",
+                coverImageName: "category_guanfu",
                 sortOrder: 2
             ),
             PuzzleCategory(
-                title: "敦煌壁画",
-                description: "线描与设色、飞天与供养人题材的敦煌壁画拼图",
-                coverImageName: "category_dunhuang",
+                title: "皇宫",
+                description: "金碧辉煌、巍峨壮丽的皇家宫殿建筑拼图",
+                coverImageName: "category_huanggong",
                 sortOrder: 3
             ),
             PuzzleCategory(
-                title: "国画",
-                description: "山水、花鸟、人物等传统国画拼图",
-                coverImageName: "category_guohua",
+                title: "桥梁",
+                description: "拱桥卧波、廊桥横卧的传统桥梁建筑拼图",
+                coverImageName: "category_qiaoliang",
                 sortOrder: 4
             ),
             PuzzleCategory(
@@ -89,45 +89,45 @@ class ContentManager: ObservableObject {
         for (index, category) in categories.enumerated() {
             // Create 3 levels per category with different difficulties
             for difficulty in PuzzleDifficulty.allCases {
-                // 特殊处理：京剧脸谱和传统年画的第一关使用特定图片
+                // 特殊处理：各分类使用特定图片
                 var previewImageName = "preview_\(index)_\(difficulty.rawValue)"
                 if difficulty == .easy {
-                    if category.title == "京剧脸谱" {
-                        previewImageName = "lianpu_01"
-                    } else if category.title == "传统年画" {
-                        previewImageName = "nianhua_01"
+                    if category.title == "民居" {
+                        previewImageName = "minju_01"
+                    } else if category.title == "官府" {
+                        previewImageName = "guanfu_01"
                     }
-                    else if category.title == "敦煌壁画" {
-                        previewImageName = "dunhuang_01"
+                    else if category.title == "皇宫" {
+                        previewImageName = "huanggong_01"
                     }
-                    else if category.title == "国画" {
-                        previewImageName = "guohua_01"
+                    else if category.title == "桥梁" {
+                        previewImageName = "qiaoliang_01"
                     }
                 }
                 else if difficulty == .standard {
-                    if category.title == "京剧脸谱" {
-                        previewImageName = "lianpu_02"
-                    } else if category.title == "传统年画" {
-                        previewImageName = "nianhua_02"
+                    if category.title == "民居" {
+                        previewImageName = "minju_02"
+                    } else if category.title == "官府" {
+                        previewImageName = "guanfu_02"
                     }
-                    else if category.title == "敦煌壁画" {
-                        previewImageName = "dunhuang_02"
+                    else if category.title == "皇宫" {
+                        previewImageName = "huanggong_02"
                     }
-                    else if category.title == "国画" {
-                        previewImageName = "guohua_02"
+                    else if category.title == "桥梁" {
+                        previewImageName = "qiaoliang_02"
                     }
                 }
                 else{
-                    if category.title == "京剧脸谱" {
-                        previewImageName = "lianpu_03"
-                    } else if category.title == "传统年画" {
-                        previewImageName = "nianhua_03"
+                    if category.title == "民居" {
+                        previewImageName = "minju_03"
+                    } else if category.title == "官府" {
+                        previewImageName = "guanfu_03"
                     }
-                    else if category.title == "敦煌壁画" {
-                        previewImageName = "dunhuang_03"
+                    else if category.title == "皇宫" {
+                        previewImageName = "huanggong_03"
                     }
-                    else if category.title == "国画" {
-                        previewImageName = "guohua_03"
+                    else if category.title == "桥梁" {
+                        previewImageName = "qiaoliang_03"
                     }
                 }
                 // 创建稳定的关卡标识符：基于分类名称和难度

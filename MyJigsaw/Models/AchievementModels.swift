@@ -24,22 +24,22 @@ struct AchievementDefinition: Identifiable, Codable, Equatable {
             let iconAssetName: String
 
             switch category.title {
-            case "传统年画":
-                title = "年画大师"
-                description = "完成所有传统年画拼图"
-                iconAssetName = "seal.fill"
-            case "京剧脸谱":
-                title = "脸谱收藏家"
-                description = "完成所有京剧脸谱拼图"
-                iconAssetName = "theatermasks.fill"
-            case "敦煌壁画":
-                title = "敦煌探秘者"
-                description = "完成所有敦煌壁画拼图"
-                iconAssetName = "photo.artframe"
-            case "国画":
-                title = "国画鉴赏家"
-                description = "完成所有国画拼图"
-                iconAssetName = "paintpalette.fill"
+            case "民居":
+                title = "民居匠人"
+                description = "完成所有民居拼图"
+                iconAssetName = "house.fill"
+            case "官府":
+                title = "衙门达人"
+                description = "完成所有官府拼图"
+                iconAssetName = "building.columns.fill"
+            case "皇宫":
+                title = "皇宫探秘者"
+                description = "完成所有皇宫拼图"
+                iconAssetName = "crown.fill"
+            case "桥梁":
+                title = "桥梁鉴赏家"
+                description = "完成所有桥梁拼图"
+                iconAssetName = "road.lanes"
             default:
                 title = "\(category.title)大师"
                 description = "完成所有\(category.title)拼图"

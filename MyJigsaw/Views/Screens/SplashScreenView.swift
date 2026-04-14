@@ -34,19 +34,19 @@ struct SplashScreenView: View {
                 
                 // 标题
                 VStack(spacing: 8) {
-                    Text("画境重圆")
+                    Text("拼筑华夏")
                         .font(.qianTuBiFeng(size: 50))
                         .foregroundColor(.traditional.ink)
                         .tracking(4) // 增加字间距
 
-                    Text("Painted Realm Reunited")
+                    Text("Rebuild the Legacy")
                         .font(.dancingScript(size: 25))
                         .foregroundColor(.black.opacity(0.8))
-                    
+
                 }
-                
+
                 // Slogan
-                Text("指尖上的传统艺术")
+                Text("在指尖之间，重筑华夏建筑之美")
                     .font(.qianTuBiFeng(size: 16))
                     .foregroundColor(.gray.opacity(0.8))
                     .padding(.top, 40)

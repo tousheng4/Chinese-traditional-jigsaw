@@ -17,8 +17,10 @@ struct PuzzleGameView: View {
     @StateObject private var settingsManager = SettingsManager.shared
     @StateObject private var contentManager = ContentManager.shared
     @StateObject private var ugcManager = UGCManager.shared
+    @StateObject private var persistenceManager = PersistenceManager.shared
     @State private var showingCompletion = false
     @State private var showingPauseMenu = false
+    @State private var wasFirstCompletion = false // 记录是否为首次完成
     @State private var ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     @State private var activeDragPieceId: UUID?
     @State private var cachedUGCBoardImage: UIImage?
@@ -29,9 +31,19 @@ struct PuzzleGameView: View {
     }
 
     private var isFirstCompletion: Bool {
-        let progress = PersistenceManager.shared.getGameProgress(forStableId: level.stableId)
-        // 如果之前没有完成过，则为首次完成
-        return !progress.isCompleted
+        // 使用状态变量记录首次完成，避免进度保存时机问题
+        // 但也要检查进度数据是否存在，以防数据被重置
+        if showingCompletion {
+            // 在显示完成界面时，重新检查进度以确保数据一致性
+            let progress = PersistenceManager.shared.getGameProgress(forStableId: level.stableId)
+            return !progress.isCompleted
+        } else if puzzleEngine.gameState.isGameCompleted {
+            // 游戏刚完成时，检查进度并记录状态
+            let progress = PersistenceManager.shared.getGameProgress(forStableId: level.stableId)
+            wasFirstCompletion = !progress.isCompleted
+            return wasFirstCompletion
+        }
+        return false
     }
     
     var body: some View {
@@ -525,6 +537,18 @@ struct PuzzleGameView: View {
             let shareImage = generateShareImage()
             let activityVC = UIActivityViewController(activityItems: [shareImage], applicationActivities: nil)
 
+            // 添加完成回调
+            activityVC.completionWithItemsHandler = { activityType, completed, returnedItems, error in
+                DispatchQueue.main.async {
+                    if completed {
+                        if activityType?.rawValue == "com.apple.UIKit.activity.SaveToCameraRoll" {
+                            // 用户选择了保存到相册，显示成功提示
+                            self.showPhotoSaveSuccessAlert()
+                        }
+                    }
+                }
+            }
+
             // 在iPad上设置弹窗位置
             if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                let window = windowScene.windows.first {
@@ -538,6 +562,21 @@ struct PuzzleGameView: View {
                let rootVC = window.rootViewController {
                 rootVC.present(activityVC, animated: true)
             }
+        }
+    }
+
+
+    private func showPhotoSaveSuccessAlert() {
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first,
+           let rootVC = window.rootViewController {
+            let alert = UIAlertController(
+                title: "保存成功",
+                message: "拼图完成图片已保存到相册！",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "确定", style: .default))
+            rootVC.present(alert, animated: true)
         }
     }
 
@@ -703,10 +742,10 @@ struct ShareResultView: View {
             // Footer: App Info
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("拾珍拼图")
+                    Text("拼筑华夏")
                         .font(.qianTuBiFeng(size: 18))
                         .foregroundColor(.traditional.vermilion)
-                    Text("传统文化，指尖留存")
+                    Text("在指尖之间，重筑华夏建筑之美")
                         .font(.qianTuBiFeng(size: 10))
                         .foregroundColor(.traditional.ink.opacity(0.4))
                 }

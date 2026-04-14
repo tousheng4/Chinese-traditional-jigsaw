@@ -144,14 +144,14 @@ struct CategoryView: View {
 
     private var categoryNameIcon: String {
         switch category.title {
-        case "传统年画":
-            return "paintbrush.fill"
-        case "京剧脸谱":
-            return "theatermasks.fill"
-        case "敦煌壁画":
-            return "photo.artframe"
-        case "国画":
-            return "paintpalette.fill"
+        case "民居":
+            return "house.fill"
+        case "官府":
+            return "building.columns.fill"
+        case "皇宫":
+            return "crown.fill"
+        case "桥梁":
+            return "road.lanes"
         default:
             return "photo.fill"
         }
@@ -356,9 +356,9 @@ struct LevelCard: View {
 #Preview {
     NavigationStack {
         CategoryView(category: PuzzleCategory(
-            title: "传统年画",
-            description: "吉祥寓意、节俗叙事的传统年画拼图",
-            coverImageName: "category_nianhua"
+            title: "民居",
+            description: "青砖黛瓦、粉墙飞檐的传统民居建筑拼图",
+            coverImageName: "category_minju"
         ))
     }
 }
