@@ -18,35 +18,65 @@ struct PuzzlePieceView: View {
     let showHint: Bool
     
     var body: some View {
+        if let imgName = piece.componentImageName {
+            componentView(imageName: imgName)
+        } else {
+            gridView
+        }
+    }
+
+    // MARK: - Component Mode View
+    private func componentView(imageName: String) -> some View {
+        let w = piece.componentDisplaySize.width
+        let h = piece.componentDisplaySize.height
+        return ZStack {
+            Image(imageName)
+                .resizable()
+                .scaledToFit()
+                .frame(width: w, height: h)
+                .shadow(color: Color.traditional.ink.opacity(piece.isLocked ? 0.0 : 0.35),
+                        radius: isSelected ? 10 : 5,
+                        x: 0, y: isSelected ? 5 : 2)
+                .scaleEffect(isSelected ? 1.05 : 1.0)
+                .animation(.easeInOut(duration: 0.2), value: isSelected)
+
+            if isSelected && !piece.isLocked {
+                RoundedRectangle(cornerRadius: 4)
+                    .stroke(Color.traditional.vermilion, lineWidth: 2)
+                    .frame(width: w, height: h)
+            }
+        }
+        .frame(width: w, height: h)
+        .contentShape(Rectangle())
+    }
+
+    // MARK: - Grid Mode View
+    private var gridView: some View {
         let pieceSize = boardSize / CGFloat(gridSize)
-        
-        ZStack {
+
+        return ZStack {
             // Main piece
             RoundedRectangle(cornerRadius: 4)
                 .fill(Color.traditional.paper)
                 .frame(width: pieceSize, height: pieceSize)
                 .overlay(
-                    // Image crop
                     imageCropView
                         .clipShape(RoundedRectangle(cornerRadius: 4))
                 )
                 .overlay(
-                    // Border
                     RoundedRectangle(cornerRadius: 4)
                         .stroke(borderColor, lineWidth: isSelected ? 3 : 1)
                 )
                 .shadow(color: Color.traditional.ink.opacity(0.3), radius: isSelected ? 8 : 4, x: 0, y: isSelected ? 4 : 2)
                 .scaleEffect(isSelected ? 1.05 : 1.0)
                 .animation(.easeInOut(duration: 0.2), value: isSelected)
-            
-            // Hint overlay
+
             if showHint && !piece.isLocked {
                 RoundedRectangle(cornerRadius: 4)
                     .fill(Color.traditional.vermilion.opacity(0.3))
                     .frame(width: pieceSize, height: pieceSize)
             }
-            
-            // Lock indicator
+
             if piece.isLocked {
                 Image(systemName: "lock.fill")
                     .font(.caption)
@@ -57,8 +87,6 @@ struct PuzzlePieceView: View {
                     .offset(x: pieceSize/2 - 10, y: -pieceSize/2 + 10)
             }
         }
-        // 关键修复：显式设置 frame 和 contentShape
-        // 这样在外部使用 .position() 后，手势检测区域仍然是碎片的实际大小
         .frame(width: pieceSize, height: pieceSize)
         .contentShape(Rectangle())
     }

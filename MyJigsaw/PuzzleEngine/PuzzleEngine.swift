@@ -25,8 +25,8 @@ class PuzzleEngine: ObservableObject {
     }
     
     // MARK: - Game Management
-    func startNewGame(level: PuzzleLevel, boardSize: CGFloat) {
-        gameState.startGame(level: level, boardSize: boardSize)
+    func startNewGame(level: PuzzleLevel, boardSize: CGFloat, screenSize: CGSize = .zero) {
+        gameState.startGame(level: level, boardSize: boardSize, screenSize: screenSize)
         
         // Play start sound if enabled
         if settingsManager.appSettings.soundEnabled {

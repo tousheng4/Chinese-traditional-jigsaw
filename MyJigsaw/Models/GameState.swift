@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import UIKit
 
 // MARK: - Game State
 @Observable
@@ -24,6 +25,8 @@ class GameState {
     var showHint: Bool = false
     /// 吸附阈值系数（相对于单块边长的比例）。例如 0.30 表示 < 0.30 * pieceSize 即吸附。
     var snapThresholdFactor: CGFloat = 0.30
+    /// 棋盘高度（部件模式下与宽度不同；网格模式下与 boardSize 相等）
+    var boardHeight: CGFloat = 0
 
     // MARK: - Grid Helpers (board pixel space)
     private func gridIndex(for center: CGPoint, cell: CGFloat, gridSize: Int) -> (col: Int, row: Int) {
@@ -88,7 +91,7 @@ class GameState {
     }
     
     // MARK: - Game Control
-    func startGame(level: PuzzleLevel, boardSize: CGFloat) {
+    func startGame(level: PuzzleLevel, boardSize: CGFloat, screenSize: CGSize = .zero) {
         currentLevel = level
         isGameActive = true
         isGameCompleted = false
@@ -99,9 +102,14 @@ class GameState {
         draggingPieceId = nil
         draggingStartCenter = nil
         showHint = false
-        
-        // Initialize puzzle pieces
-        initializePuzzlePieces(for: level, boardSize: boardSize)
+
+        if level.puzzleMode == .component, level.canvasAspect > 0 {
+            boardHeight = boardSize / level.canvasAspect
+        } else {
+            boardHeight = boardSize
+        }
+
+        initializePuzzlePieces(for: level, boardSize: boardSize, screenSize: screenSize)
     }
     
     func endGame() {
@@ -114,8 +122,14 @@ class GameState {
     }
     
     // MARK: - Puzzle Piece Management
-    private func initializePuzzlePieces(for level: PuzzleLevel, boardSize: CGFloat) {
+    private func initializePuzzlePieces(for level: PuzzleLevel, boardSize: CGFloat, screenSize: CGSize = .zero) {
         puzzlePieces = []
+
+        if level.puzzleMode == .component {
+            initializeComponentPieces(for: level, boardWidth: boardSize, screenSize: screenSize)
+            return
+        }
+
         let gridSize = level.gridSize
         let cell = boardSize / CGFloat(gridSize)
         let pieceSize = CGSize(width: 1.0 / CGFloat(gridSize), height: 1.0 / CGFloat(gridSize)) // 仍用于裁切比例
@@ -195,6 +209,73 @@ class GameState {
         }
     }
     
+    private func initializeComponentPieces(for level: PuzzleLevel, boardWidth: CGFloat, screenSize: CGSize) {
+        guard let defs = level.componentPieces, level.canvasSize.width > 0 else { return }
+        let scale = boardWidth / level.canvasSize.width
+        let bH = boardHeight
+
+        // 棋盘在屏幕中的偏移（以棋盘坐标系表示）
+        // 部件中心只要让部件边界不超出屏幕边缘即可
+        let boardOriginX = screenSize.width  > 0 ? (screenSize.width  - boardWidth) / 2 : 0
+        let boardOriginY = screenSize.height > 0 ? (screenSize.height - bH)         / 2 : 0
+
+        // 屏幕边界在棋盘坐标系中的范围
+        let screenXLo = -boardOriginX
+        let screenXHi =  boardWidth  + boardOriginX
+        let screenYLo = -boardOriginY
+        let screenYHi =  bH          + boardOriginY
+
+        // 每个部件的有效中心范围：部件四边不超出屏幕
+        // 注意 xHi / yHi 的 max(…, xLo/yLo) 保证在部件比屏幕还大时中心取中点
+        struct Entry {
+            let def: ComponentPieceDefinition
+            let dW, dH, tx, ty: CGFloat
+            let xLo, xHi, yLo, yHi: CGFloat
+        }
+
+        var entries: [Entry] = []
+        for def in defs {
+            guard let img = UIImage(named: def.imageName) else { continue }
+            let dW = img.size.width  * scale
+            let dH = img.size.height * scale
+            let xLo = screenXLo + dW / 2
+            let xHi = max(screenXHi - dW / 2, xLo)
+            let yLo = screenYLo + dH / 2
+            let yHi = max(screenYHi - dH / 2, yLo)
+            entries.append(Entry(
+                def: def, dW: dW, dH: dH,
+                tx: def.targetCenter.x * boardWidth,
+                ty: def.targetCenter.y * bH,
+                xLo: xLo, xHi: xHi, yLo: yLo, yHi: yHi
+            ))
+        }
+        guard !entries.isEmpty else { return }
+
+        // 把 Y 轴均匀分成 n 个槽位并打乱，保证各部件初始 Y 不同
+        let n = entries.count
+        let yFractions = (0..<n).map { CGFloat($0) / max(CGFloat(n - 1), 1) }.shuffled()
+
+        for (i, e) in entries.enumerated() {
+            let yRange = e.yHi - e.yLo
+            let baseY  = e.yLo + yFractions[i] * yRange
+            let jitter = yRange / CGFloat(n + 1) * 0.4
+            let initY  = min(max(baseY + CGFloat.random(in: -jitter...jitter), e.yLo), e.yHi)
+
+            let xRange = e.xHi - e.xLo
+            let initX  = xRange > 2 ? CGFloat.random(in: e.xLo...e.xHi) : (e.xLo + e.xHi) / 2
+
+            puzzlePieces.append(PuzzlePiece(
+                index: i,
+                imageCropRect: .zero,
+                targetPosition: CGPoint(x: e.tx, y: e.ty),
+                currentPosition: CGPoint(x: initX, y: initY),
+                componentImageName: e.def.imageName,
+                componentDisplaySize: CGSize(width: e.dW, height: e.dH),
+                componentZIndex: e.def.zIndex
+            ))
+        }
+    }
+
     // MARK: - Game Actions
     func selectPiece(_ piece: PuzzlePiece) {
         // 已锁定的块不允许再选中（避免误触抬层级/手势）
@@ -236,8 +317,28 @@ class GameState {
         guard puzzlePieces[index].isLocked == false else { return false }
         guard draggingPieceId == pieceId else { return false }
 
-        let cell = boardSize / CGFloat(gridSize)
         let piece = puzzlePieces[index]
+
+        // 部件模式：直接距离判断，不走网格逻辑
+        if currentLevel?.puzzleMode == .component {
+            moveCount += 1
+            let dist = hypot(piece.currentPosition.x - piece.targetPosition.x,
+                             piece.currentPosition.y - piece.targetPosition.y)
+            if dist <= boardSize * 0.07 {
+                puzzlePieces[index].currentPosition = piece.targetPosition
+                puzzlePieces[index].isLocked = true
+                SoundManager.shared.playJigsawSound()
+                checkGameCompletion()
+                draggingPieceId = nil
+                draggingStartCenter = nil
+                return true
+            }
+            draggingPieceId = nil
+            draggingStartCenter = nil
+            return false
+        }
+
+        let cell = boardSize / CGFloat(gridSize)
 
         // 如果碎片被放到棋盘外：不吸附，直接保留当前位置
         if !isInsideBoard(center: piece.currentPosition, boardSize: boardSize) {

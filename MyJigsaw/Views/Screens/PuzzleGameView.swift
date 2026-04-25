@@ -20,10 +20,14 @@ struct PuzzleGameView: View {
     @StateObject private var persistenceManager = PersistenceManager.shared
     @State private var showingCompletion = false
     @State private var showingPauseMenu = false
-    @State private var wasFirstCompletion = false // 记录是否为首次完成
+    @State private var wasFirstCompletion = false
     @State private var ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     @State private var activeDragPieceId: UUID?
     @State private var cachedUGCBoardImage: UIImage?
+    // 完成动画状态
+    @State private var showBoardReveal = false
+    @State private var showConfetti = false
+    @State private var showCompletionScreen = false
 
     // 微注释相关
     private var microAnnotationPack: MicroAnnotationPack? {
@@ -31,14 +35,10 @@ struct PuzzleGameView: View {
     }
 
     private var isFirstCompletion: Bool {
-        // 使用状态变量记录首次完成，避免进度保存时机问题
-        // 但也要检查进度数据是否存在，以防数据被重置
-        if showingCompletion {
-            // 在显示完成界面时，重新检查进度以确保数据一致性
+        if showCompletionScreen {
             let progress = PersistenceManager.shared.getGameProgress(forStableId: level.stableId)
             return !progress.isCompleted
         } else if puzzleEngine.gameState.isGameCompleted {
-            // 游戏刚完成时，检查进度并记录状态
             let progress = PersistenceManager.shared.getGameProgress(forStableId: level.stableId)
             wasFirstCompletion = !progress.isCompleted
             return wasFirstCompletion
@@ -48,47 +48,76 @@ struct PuzzleGameView: View {
     
     var body: some View {
         GeometryReader { geometry in
-            let boardSize = min(geometry.size.width, geometry.size.height) * 0.8
+            let isComponent = level.puzzleMode == .component
+            let boardWidth: CGFloat = isComponent
+                ? geometry.size.width * 0.92
+                : min(geometry.size.width, geometry.size.height) * 0.8
+            let boardHeight: CGFloat = isComponent && level.canvasAspect > 0
+                ? boardWidth / level.canvasAspect
+                : boardWidth
+            let boardSize = boardWidth
             ZStack {
                 // Background
                 Color.traditional.paper.ignoresSafeArea()
                 
-                if puzzleEngine.gameState.isGameActive {
-                    // Game board - 允许碎片移动到任意位置
-                    puzzleBoard(boardSize: boardSize, screenSize: geometry.size)
-                    
-                    // Game UI overlay
-                    VStack {
-                        // Top bar
-                        gameTopBar
-                            .padding()
-                        
-                        Spacer()
-                        
-                        // Bottom bar
-                        gameBottomBar
-                            .padding()
+                if puzzleEngine.gameState.isGameActive || showBoardReveal {
+                    // 游戏进行中或封面揭示动画时显示棋盘
+                    puzzleBoard(boardWidth: boardWidth, boardHeight: boardHeight, screenSize: geometry.size)
+
+                    if puzzleEngine.gameState.isGameActive {
+                        // Game UI overlay（仅游戏进行时）
+                        VStack {
+                            gameTopBar
+                                .padding()
+
+                            if let def = selectedComponentDef {
+                                componentInfoCard(def)
+                                    .padding(.horizontal)
+                                    .transition(.move(edge: .top).combined(with: .opacity))
+                            }
+
+                            Spacer()
+
+                            gameBottomBar
+                                .padding()
+                        }
+                        .animation(.easeInOut(duration: 0.22), value: selectedComponentDef?.id)
                     }
                 } else if !puzzleEngine.gameState.isGameCompleted {
-                    // Start screen
-                    startScreen(boardSize: boardSize)
+                    startScreen(boardSize: boardSize, screenSize: geometry.size)
                 }
-                
-                // Completion screen
-                if puzzleEngine.gameState.isGameCompleted {
+
+                // 彩带
+                if showConfetti {
+                    ConfettiView(origin: CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2))
+                }
+
+                // 完成界面（延迟出现）
+                if showCompletionScreen {
                     Color.traditional.ink.opacity(0.7)
                         .ignoresSafeArea()
-
                     completionScreen
-                        .onAppear {
-                            // 恭喜界面出现时播放成功音效
-                            SoundManager.shared.playSucceedSound()
-                        }
                 }
             }
             // 预热UGC棋盘图缓存：确保开始页也能尽快拿到图（同时提升进入游戏后的流畅度）
             .task(id: boardSize) {
                 updateCachedUGCBoardImage(boardSize: boardSize)
+            }
+            .onChange(of: puzzleEngine.gameState.isGameCompleted) { _, completed in
+                guard completed else { return }
+                SoundManager.shared.playSucceedSound()
+                withAnimation(.easeInOut(duration: 0.55)) {
+                    showBoardReveal = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    showConfetti = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.4) {
+                    showConfetti = false
+                    withAnimation(.easeInOut(duration: 0.4)) {
+                        showCompletionScreen = true
+                    }
+                }
             }
         }
         .navigationTitle(level.title)
@@ -131,74 +160,91 @@ struct PuzzleGameView: View {
     }
     
     // MARK: - Puzzle Board
-    private func puzzleBoard(boardSize: CGFloat, screenSize: CGSize) -> some View {
+    private func puzzleBoard(boardWidth: CGFloat, boardHeight: CGFloat, screenSize: CGSize) -> some View {
         let gridSize = level.gridSize
-        let pieceSize = boardSize / CGFloat(gridSize)
-        // 计算棋盘在屏幕中的中心偏移（用于坐标转换）
-        let boardOriginX = (screenSize.width - boardSize) / 2
-        let boardOriginY = (screenSize.height - boardSize) / 2
+        let boardOriginX = (screenSize.width - boardWidth) / 2
+        let boardOriginY = (screenSize.height - boardHeight) / 2
         let ugcImage = cachedUGCBoardImage
+        let isComponent = level.puzzleMode == .component
 
         return ZStack {
-            // Background board - 显式设置 frame 确保布局正确
+            // 棋盘背景
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color.traditional.ocher.opacity(0.1))
-                .frame(width: boardSize, height: boardSize)
+                .frame(width: boardWidth, height: boardHeight)
                 .shadow(color: Color.traditional.ink.opacity(0.1), radius: 10)
                 .position(x: screenSize.width / 2, y: screenSize.height / 2)
 
-            // 可选：在棋盘底层铺一张"同规则裁切"的整图（用于提示/对齐感知）
-            // 注意：不参与点击命中，避免影响拖拽。
-            Group {
-                if let ugcImage {
-                    Image(uiImage: ugcImage)
-                        .resizable()
+            // 提示图（grid 模式：整图半透明叠底；component 模式：各部件叠到目标位置）
+            if puzzleEngine.gameState.showHint {
+                if isComponent {
+                    ForEach(puzzleEngine.gameState.puzzlePieces) { piece in
+                        if let imgName = piece.componentImageName {
+                            Image(imgName)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: piece.componentDisplaySize.width,
+                                       height: piece.componentDisplaySize.height)
+                                .opacity(0.30)
+                                .allowsHitTesting(false)
+                                .zIndex(Double(piece.componentZIndex))
+                                .position(x: boardOriginX + piece.targetPosition.x,
+                                          y: boardOriginY + piece.targetPosition.y)
+                        }
+                    }
                 } else {
-                    Image(level.previewImageName)
-                        .resizable()
+                    Group {
+                        if let ugcImage {
+                            Image(uiImage: ugcImage).resizable()
+                        } else {
+                            Image(level.previewImageName).resizable()
+                        }
+                    }
+                    .scaledToFill()
+                    .frame(width: boardWidth, height: boardHeight)
+                    .clipped()
+                    .opacity(0.25)
+                    .allowsHitTesting(false)
+                    .position(x: screenSize.width / 2, y: screenSize.height / 2)
                 }
             }
-            .scaledToFill()
-            .frame(width: boardSize, height: boardSize)
-            .clipped()
-            .opacity(puzzleEngine.gameState.showHint ? 0.25 : 0.0)
-            .allowsHitTesting(false)
-            .position(x: screenSize.width / 2, y: screenSize.height / 2)
-            
-            // Grid lines (optional visual guide)
-            if settingsManager.appSettings.showGuideOverlay {
-                gridLines(size: boardSize, gridSize: gridSize)
-                    .frame(width: boardSize, height: boardSize)
+
+            // 网格线（仅 grid 模式）
+            if !isComponent && settingsManager.appSettings.showGuideOverlay {
+                gridLines(size: boardWidth, gridSize: gridSize)
+                    .frame(width: boardWidth, height: boardWidth)
                     .allowsHitTesting(false)
                     .position(x: screenSize.width / 2, y: screenSize.height / 2)
             }
-            
-            // Puzzle pieces - 使用精确的 frame 和 position 确保手势区域正确
+
+            // 拼图碎片（完成后隐藏，由封面图取代）
+            if !showBoardReveal {
             ForEach(puzzleEngine.gameState.puzzlePieces) { piece in
+                let pieceW: CGFloat = isComponent ? piece.componentDisplaySize.width  : boardWidth / CGFloat(gridSize)
+                let pieceH: CGFloat = isComponent ? piece.componentDisplaySize.height : boardWidth / CGFloat(gridSize)
+
                 PuzzlePieceView(
                     piece: piece,
                     gridSize: gridSize,
-                    boardSize: boardSize,
+                    boardSize: boardWidth,
                     imageName: level.previewImageName,
                     sourceImage: ugcImage,
                     isSelected: puzzleEngine.gameState.selectedPieceId == piece.id,
                     showHint: puzzleEngine.gameState.showHint
                 )
-                // 关键：先设置 frame 限定碎片大小，确保手势检测区域只在碎片的实际大小范围内
-                .frame(width: pieceSize, height: pieceSize)
-                .contentShape(Rectangle()) // 确保整个碎片区域可响应手势
+                .frame(width: pieceW, height: pieceH)
+                .contentShape(Rectangle())
                 .gesture(
                     DragGesture(minimumDistance: 1, coordinateSpace: .named("gameArea"))
                         .onChanged { value in
-                            // 记录当前正在拖拽的 piece
                             activeDragPieceId = piece.id
                             if puzzleEngine.gameState.draggingPieceId != piece.id {
                                 puzzleEngine.beginDrag(pieceId: piece.id)
                             }
-                            puzzleEngine.updateDrag(pieceId: piece.id, translation: value.translation, boardSize: boardSize, gridSize: gridSize)
+                            puzzleEngine.updateDrag(pieceId: piece.id, translation: value.translation, boardSize: boardWidth, gridSize: gridSize)
                         }
                         .onEnded { _ in
-                            puzzleEngine.endDrag(pieceId: piece.id, boardSize: boardSize, gridSize: gridSize)
+                            puzzleEngine.endDrag(pieceId: piece.id, boardSize: boardWidth, gridSize: gridSize)
                             if activeDragPieceId == piece.id {
                                 activeDragPieceId = nil
                             }
@@ -207,31 +253,52 @@ struct PuzzleGameView: View {
                 .onTapGesture {
                     puzzleEngine.handlePieceTap(piece)
                 }
-                // 正在拖拽的碎片 zIndex 最高，其次是选中的，锁定的最低
                 .zIndex(
-                    activeDragPieceId == piece.id ? 100 :
-                    (piece.isLocked ? 0 : (puzzleEngine.gameState.selectedPieceId == piece.id ? 2 : 1))
+                    activeDragPieceId == piece.id ? 1000 :
+                    piece.isLocked
+                        ? Double(piece.componentZIndex)
+                        : Double(500 + (puzzleEngine.gameState.selectedPieceId == piece.id ? 10 : 0))
                 )
-                // 使用 position 进行绝对定位
-                // 碎片的 currentPosition 是相对于棋盘左上角的坐标，需要转换到屏幕坐标
                 .position(
                     x: boardOriginX + piece.currentPosition.x,
                     y: boardOriginY + piece.currentPosition.y
                 )
             }
+            } // if !showBoardReveal
+
+            // 封面揭示图（完成时替换部件）
+            if showBoardReveal {
+                Group {
+                    if isComponent {
+                        Image(level.previewImageName)
+                            .resizable()
+                            .scaledToFit()
+                    } else {
+                        Image(level.previewImageName)
+                            .resizable()
+                            .scaledToFill()
+                    }
+                }
+                .frame(width: boardWidth, height: boardHeight)
+                .clipped()
+                .cornerRadius(12)
+                .shadow(color: .black.opacity(0.25), radius: 10, x: 0, y: 4)
+                .allowsHitTesting(false)
+                .position(x: screenSize.width / 2, y: screenSize.height / 2)
+                .transition(.scale(scale: 0.95).combined(with: .opacity))
+                .zIndex(200)
+            }
         }
-        // 使用整个屏幕大小作为游戏区域，允许碎片移动到任意位置
         .frame(width: screenSize.width, height: screenSize.height)
         .coordinateSpace(name: "gameArea")
-        // UGC图片：按棋盘尺寸缓存降采样图，减少渲染开销
         .onAppear {
-            updateCachedUGCBoardImage(boardSize: boardSize)
+            updateCachedUGCBoardImage(boardSize: boardWidth)
         }
         .onChange(of: level.id) { _, _ in
-            updateCachedUGCBoardImage(boardSize: boardSize)
+            updateCachedUGCBoardImage(boardSize: boardWidth)
         }
-        .onChange(of: boardSize) { _, _ in
-            updateCachedUGCBoardImage(boardSize: boardSize)
+        .onChange(of: boardWidth) { _, _ in
+            updateCachedUGCBoardImage(boardSize: boardWidth)
         }
     }
     
@@ -347,7 +414,7 @@ struct PuzzleGameView: View {
     }
     
     // MARK: - Start Screen
-    private func startScreen(boardSize: CGFloat) -> some View {
+    private func startScreen(boardSize: CGFloat, screenSize: CGSize) -> some View {
         VStack(spacing: 30) {
             // Level preview
             RoundedRectangle(cornerRadius: 16)
@@ -401,7 +468,7 @@ struct PuzzleGameView: View {
             }
             
             // Start button
-            Button(action: { startGame(boardSize: boardSize) }) {
+            Button(action: { startGame(boardSize: boardSize, screenSize: screenSize) }) {
                 Text("开始游戏")
             }
             .buttonStyle(TraditionalButtonStyle())
@@ -411,19 +478,26 @@ struct PuzzleGameView: View {
     
     // MARK: - Completion Screen
     private var completionScreen: some View {
-        VStack(spacing: 30) {
-            // Success icon
-            // Image(systemName: "seal.fill")
-            //     .font(.system(size: 80))
-            //     .foregroundColor(.traditional.vermilion)
-            
+        VStack(spacing: 20) {
+            // 部件模式：展示完整图片
+            if level.puzzleMode == .component {
+                Image(level.previewImageName)
+                    .resizable()
+                    .scaledToFit()
+                    .cornerRadius(12)
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.traditional.ocher, lineWidth: 2))
+                    .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 4)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+            }
+
             // Completion message
-            VStack(spacing: 16) {
+            VStack(spacing: 8) {
                 Text("恭喜完成！")
                     .font(.qianTuBiFeng(size: 28))
                     .foregroundColor(.white)
-                
-                Text("您成功完成了这幅拼图")
+
+                Text(level.puzzleMode == .component ? "您成功还原了\(level.title)" : "您成功完成了这幅拼图")
                     .font(.qianTuBiFeng(size: 15))
                     .foregroundColor(.traditional.paper.opacity(0.9))
             }
@@ -476,10 +550,7 @@ struct PuzzleGameView: View {
                 .cornerRadius(8)
                 .padding(.horizontal, 40)
 
-                Button(action: {
-                    showingCompletion = false
-                    restartGame()
-                }) {
+                Button(action: { restartGame() }) {
                     Text("再玩一次")
                 }
                 .buttonStyle(TraditionalButtonStyle(isPrimary: false))
@@ -487,10 +558,7 @@ struct PuzzleGameView: View {
                 .cornerRadius(8)
                 .padding(.horizontal, 40)
 
-                Button(action: {
-                    showingCompletion = false
-                    quitGame()
-                }) {
+                Button(action: { quitGame() }) {
                     Text("返回")
                 }
                 .buttonStyle(TraditionalButtonStyle())
@@ -503,14 +571,11 @@ struct PuzzleGameView: View {
         .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.traditional.ocher, lineWidth: 2))
         .shadow(color: Color.black.opacity(0.5), radius: 20, x: 0, y: 10) // 添加阴影
         .padding()
-        .onAppear {
-            showingCompletion = true
-        }
     }
-    
+
     // MARK: - Game Actions
-    private func startGame(boardSize: CGFloat) {
-        puzzleEngine.startNewGame(level: level, boardSize: boardSize)
+    private func startGame(boardSize: CGFloat, screenSize: CGSize) {
+        puzzleEngine.startNewGame(level: level, boardSize: boardSize, screenSize: screenSize)
     }
 
     private func autoCompleteGame() {
@@ -523,11 +588,16 @@ struct PuzzleGameView: View {
 
     private func restartGame() {
         puzzleEngine.endGame()
-        // 这里不直接重启，因为需要棋盘尺寸；用户点击"开始游戏"会重新传入 boardSize
+        showBoardReveal = false
+        showConfetti = false
+        showCompletionScreen = false
     }
 
     private func quitGame() {
         puzzleEngine.endGame()
+        showBoardReveal = false
+        showConfetti = false
+        showCompletionScreen = false
         dismiss()
     }
 
@@ -623,6 +693,37 @@ struct PuzzleGameView: View {
         return ugcManager.getThumbnail(for: ugcPuzzle) ?? ugcManager.getImage(for: ugcPuzzle)
     }
     
+    // MARK: - Component Info
+    private var selectedComponentDef: ComponentPieceDefinition? {
+        guard level.puzzleMode == .component,
+              let selectedId = puzzleEngine.gameState.selectedPieceId,
+              let piece = puzzleEngine.gameState.puzzlePieces.first(where: { $0.id == selectedId && !$0.isLocked }),
+              let imgName = piece.componentImageName
+        else { return nil }
+        return level.componentPieces?.first(where: { $0.imageName == imgName })
+    }
+
+    private func componentInfoCard(_ def: ComponentPieceDefinition) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(def.name)
+                    .font(.qianTuBiFeng(size: 17))
+                    .foregroundColor(.traditional.vermilion)
+                Text(def.description)
+                    .font(.system(size: 13))
+                    .foregroundColor(.traditional.ink.opacity(0.75))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color.traditional.paper)
+        .cornerRadius(10)
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.traditional.ocher.opacity(0.5), lineWidth: 1))
+        .shadow(color: Color.traditional.ink.opacity(0.08), radius: 6, x: 0, y: 3)
+    }
+
     // MARK: - Helper Methods
     private func formatTime(_ timeInterval: TimeInterval) -> String {
         let minutes = Int(timeInterval) / 60

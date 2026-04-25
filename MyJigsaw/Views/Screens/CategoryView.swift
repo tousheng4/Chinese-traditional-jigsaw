@@ -14,11 +14,20 @@ struct CategoryView: View {
     @StateObject private var ugcManager = UGCManager.shared
 
     @State private var showDIYCreation = false
+    @State private var selectedMode: PuzzleMode = .grid
 
-    private var levels: [PuzzleLevel] {
+    private var allLevels: [PuzzleLevel] {
         contentManager.getLevels(for: category.id)
     }
-    
+
+    private var hasComponentLevels: Bool {
+        allLevels.contains(where: { $0.puzzleMode == .component })
+    }
+
+    private var filteredLevels: [PuzzleLevel] {
+        allLevels.filter { $0.puzzleMode == selectedMode }
+    }
+
     var body: some View {
         ZStack {
             Color.traditional.paper.ignoresSafeArea()
@@ -30,6 +39,8 @@ struct CategoryView: View {
                     if category.isUGC {
                         ugcSection
                     } else {
+                        modePicker
+                            .padding(.horizontal)
                         levelsGrid
                     }
                 }
@@ -90,7 +101,7 @@ struct CategoryView: View {
             }
 
             // UGC关卡列表
-            if !levels.isEmpty {
+            if !allLevels.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("我的拼图")
                         .font(.qianTuBiFeng(size: 22))
@@ -99,7 +110,7 @@ struct CategoryView: View {
                     LazyVGrid(columns: [
                         GridItem(.adaptive(minimum: 150), spacing: 16)
                     ], spacing: 16) {
-                        ForEach(levels) { level in
+                        ForEach(allLevels) { level in
                             NavigationLink(destination: PuzzleGameView(level: level)) {
                                 UGCLevelCard(level: level, ugcPuzzle: contentManager.getUGCPuzzle(for: level.id))
                             }
@@ -127,17 +138,57 @@ struct CategoryView: View {
         }
     }
 
+    // MARK: - Mode Picker
+    private var modePicker: some View {
+        HStack(spacing: 0) {
+            modeButton("经典拼图", mode: .grid)
+            modeButton("部件拼图", mode: .component)
+        }
+        .background(Color.traditional.ocher.opacity(0.08))
+        .cornerRadius(10)
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.traditional.ocher.opacity(0.4), lineWidth: 1))
+        .animation(.easeInOut(duration: 0.18), value: selectedMode)
+    }
+
+    private func modeButton(_ title: String, mode: PuzzleMode) -> some View {
+        Button(action: { selectedMode = mode }) {
+            Text(title)
+                .font(.qianTuBiFeng(size: 15))
+                .foregroundColor(selectedMode == mode ? .white : .traditional.ink.opacity(0.7))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 9)
+                .background(selectedMode == mode ? Color.traditional.vermilion : Color.clear)
+                .cornerRadius(9)
+        }
+        .padding(3)
+    }
+
     // MARK: - Levels Grid
     private var levelsGrid: some View {
-        LazyVGrid(columns: [
-            GridItem(.adaptive(minimum: 150), spacing: 16)
-        ], spacing: 16) {
-            ForEach(levels) { level in
-                NavigationLink(destination: PuzzleGameView(level: level)) {
-                    LevelCard(level: level)
+        Group {
+            if filteredLevels.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "tray")
+                        .font(.system(size: 40))
+                        .foregroundColor(.traditional.ocher.opacity(0.5))
+                    Text("暂无\(selectedMode == .component ? "部件" : "经典")拼图")
+                        .font(.qianTuBiFeng(size: 15))
+                        .foregroundColor(.secondary)
                 }
-                .buttonStyle(PlainButtonStyle())
-                .disabled(level.isLocked)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 40)
+            } else {
+                LazyVGrid(columns: [
+                    GridItem(.adaptive(minimum: 150), spacing: 16)
+                ], spacing: 16) {
+                    ForEach(filteredLevels) { level in
+                        NavigationLink(destination: PuzzleGameView(level: level)) {
+                            LevelCard(level: level)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .disabled(level.isLocked)
+                    }
+                }
             }
         }
     }

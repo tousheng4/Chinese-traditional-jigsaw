@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreGraphics
 
 // MARK: - Puzzle Category
 struct PuzzleCategory: Identifiable, Codable {
@@ -26,6 +27,31 @@ struct PuzzleCategory: Identifiable, Codable {
     }
 }
 
+// MARK: - Puzzle Mode
+enum PuzzleMode: String, Codable {
+    case grid
+    case component
+}
+
+// MARK: - Component Piece Definition
+struct ComponentPieceDefinition: Codable, Identifiable {
+    let id: String
+    let imageName: String
+    let name: String
+    let description: String
+    let targetCenter: CGPoint  // normalized 0~1 (x/canvasW, y/canvasH)
+    let zIndex: Int            // rendering layer order: higher = rendered on top
+
+    init(id: String, imageName: String, name: String, description: String, targetCenter: CGPoint, zIndex: Int = 0) {
+        self.id = id
+        self.imageName = imageName
+        self.name = name
+        self.description = description
+        self.targetCenter = targetCenter
+        self.zIndex = zIndex
+    }
+}
+
 // MARK: - Puzzle Level
 struct PuzzleLevel: Identifiable, Codable {
     let id: UUID
@@ -40,8 +66,14 @@ struct PuzzleLevel: Identifiable, Codable {
     let countsForModuleAchievement: Bool
     /// 稳定的关卡标识符，用于持久化匹配
     let stableId: String
+    // 部件拼图扩展字段
+    let puzzleMode: PuzzleMode
+    let componentPieces: [ComponentPieceDefinition]?
+    let canvasSize: CGSize  // 画布像素尺寸，部件模式下使用
 
-    init(id: UUID = UUID(), categoryId: UUID, title: String, previewImageName: String, sourceInfo: String, gridSize: Int, difficulty: PuzzleDifficulty, isLocked: Bool = true, countsForModuleAchievement: Bool = true, stableId: String? = nil) {
+    var canvasAspect: CGFloat { canvasSize.width / canvasSize.height }
+
+    init(id: UUID = UUID(), categoryId: UUID, title: String, previewImageName: String, sourceInfo: String, gridSize: Int, difficulty: PuzzleDifficulty, isLocked: Bool = true, countsForModuleAchievement: Bool = true, stableId: String? = nil, puzzleMode: PuzzleMode = .grid, componentPieces: [ComponentPieceDefinition]? = nil, canvasSize: CGSize = .zero) {
         self.id = id
         self.categoryId = categoryId
         self.title = title
@@ -51,8 +83,10 @@ struct PuzzleLevel: Identifiable, Codable {
         self.difficulty = difficulty
         self.isLocked = isLocked
         self.countsForModuleAchievement = countsForModuleAchievement
-        // 如果没有提供稳定的ID，则使用categoryId和difficulty的组合
         self.stableId = stableId ?? "\(categoryId.uuidString)_\(difficulty.rawValue)"
+        self.puzzleMode = puzzleMode
+        self.componentPieces = componentPieces
+        self.canvasSize = canvasSize
     }
 }
 
@@ -84,14 +118,21 @@ struct PuzzlePiece: Identifiable, Codable {
     /// 当前中心点（单位：棋盘内像素坐标）
     var currentPosition: CGPoint
     var isLocked: Bool
-    
-    init(id: UUID = UUID(), index: Int, imageCropRect: CGRect, targetPosition: CGPoint, currentPosition: CGPoint, isLocked: Bool = false) {
+    // 部件模式专用字段
+    var componentImageName: String?
+    var componentDisplaySize: CGSize
+    var componentZIndex: Int  // layer order for locked pieces (higher = on top)
+
+    init(id: UUID = UUID(), index: Int, imageCropRect: CGRect, targetPosition: CGPoint, currentPosition: CGPoint, isLocked: Bool = false, componentImageName: String? = nil, componentDisplaySize: CGSize = .zero, componentZIndex: Int = 0) {
         self.id = id
         self.index = index
         self.imageCropRect = imageCropRect
         self.targetPosition = targetPosition
         self.currentPosition = currentPosition
         self.isLocked = isLocked
+        self.componentImageName = componentImageName
+        self.componentDisplaySize = componentDisplaySize
+        self.componentZIndex = componentZIndex
     }
 }
 

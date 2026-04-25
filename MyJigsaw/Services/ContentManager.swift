@@ -85,8 +85,9 @@ class ContentManager: ObservableObject {
     private func createSampleLevels() -> [PuzzleLevel] {
         var levels: [PuzzleLevel] = []
         
-        // Sample levels for each category
+        // Sample levels for each category (skip UGC)
         for (index, category) in categories.enumerated() {
+            guard !category.isUGC else { continue }
             // Create 3 levels per category with different difficulties
             for difficulty in PuzzleDifficulty.allCases {
                 // 特殊处理：各分类使用特定图片
@@ -148,9 +149,61 @@ class ContentManager: ObservableObject {
             }
         }
         
+        // 部件拼图关卡：挂到对应的普通分类下
+        let bridgeCategory = categories.first(where: { $0.title == "桥梁" })!
+        let zhaozhou = PuzzleLevel(
+            id: UUID(uuidString: "BB000001-0000-0000-0000-000000000001")!,
+            categoryId: bridgeCategory.id,
+            title: "赵州桥",
+            previewImageName: "zhaozhou_preview",
+            sourceInfo: "隋朝 · 公元595—605年，李春设计建造，现存最古老的石拱桥",
+            gridSize: 1,
+            difficulty: .standard,
+            isLocked: false,
+            countsForModuleAchievement: false,
+            stableId: "component_zhaozhou_bridge",
+            puzzleMode: .component,
+            componentPieces: [
+                ComponentPieceDefinition(id: "left_arch",  imageName: "zhaozhou_left_arch",  name: "左小拱",  description: "主拱左侧的小拱券，减轻桥身自重，同时扩大过洪面积，是敞肩拱的核心创新。",  targetCenter: CGPoint(x: 814    / 1890, y: 897   / 1417)),
+                ComponentPieceDefinition(id: "left_pier",  imageName: "zhaozhou_left_pier",  name: "左桥台",  description: "左侧桥台承受主拱传来的水平推力，以精密干砌石块砌筑，不用灰浆，稳固千年。", targetCenter: CGPoint(x: 286.5  / 1890, y: 1085  / 1417)),
+                ComponentPieceDefinition(id: "main_arch",  imageName: "zhaozhou_main_arch",  name: "主拱",    description: "桥梁核心结构，净跨37米，由28道独立拱圈并列砌成，是当时世界最大的石拱桥。",   targetCenter: CGPoint(x: 1125.5 / 1890, y: 939.5 / 1417)),
+                ComponentPieceDefinition(id: "right_arch", imageName: "zhaozhou_right_arch", name: "右小拱",  description: "与左小拱对称，两侧小拱共同将主拱自重减轻约15%，并在洪水期加速泄洪。",         targetCenter: CGPoint(x: 1441.5 / 1890, y: 719.5 / 1417)),
+                ComponentPieceDefinition(id: "right_pier", imageName: "zhaozhou_right_pier", name: "右桥台",  description: "右侧桥台与左桥台共同形成稳定支撑，两端桥台深埋地基，抵抗拱脚外推力。",         targetCenter: CGPoint(x: 1789   / 1890, y: 770.5 / 1417)),
+                ComponentPieceDefinition(id: "deck",       imageName: "zhaozhou_deck",       name: "桥面",    description: "宽约9米，可供两辆马车并行，纵向条石铺砌，历经1400年车马碾压仍保持平整。",      targetCenter: CGPoint(x: 965    / 1890, y: 711   / 1417)),
+            ],
+            canvasSize: CGSize(width: 1890, height: 1417)
+        )
+        levels.append(zhaozhou)
+
+        let palaceCategory = categories.first(where: { $0.title == "皇宫" })!
+        let gugong = PuzzleLevel(
+            id: UUID(uuidString: "CC000001-0000-0000-0000-000000000001")!,
+            categoryId: palaceCategory.id,
+            title: "故宫",
+            previewImageName: "gugong_preview",
+            sourceInfo: "明清两朝皇宫，始建于明永乐四年（1406年），世界现存规模最大的古代宫殿建筑群",
+            gridSize: 1,
+            difficulty: .standard,
+            isLocked: false,
+            countsForModuleAchievement: false,
+            stableId: "component_gugong_palace",
+            puzzleMode: .component,
+            componentPieces: [
+                ComponentPieceDefinition(id: "roof",       imageName: "gugong_roof",       name: "屋顶",       description: "重檐庑殿顶，最高等级的屋顶形式，黄色琉璃瓦象征皇权，正脊两端饰鸱吻，垂脊置走兽。",       targetCenter: CGPoint(x: 1050   / 2048, y: 1154   / 2048), zIndex: 6),
+                ComponentPieceDefinition(id: "chiwen",     imageName: "gugong_chiwen",     name: "鸱吻和走兽", description: "鸱吻立于正脊两端，传说能镇火避灾；垂脊上的走兽数量越多，建筑等级越高，太和殿共有十只。", targetCenter: CGPoint(x: 1055.5 / 2048, y: 1133.5 / 2048), zIndex: 5),
+                ComponentPieceDefinition(id: "windows",    imageName: "gugong_windows",    name: "门窗",       description: "隔扇门窗以楠木精雕细琢，菱花纹格心象征吉祥，朱红油漆与金色装饰彰显皇家气派。",           targetCenter: CGPoint(x: 1081.5 / 2048, y: 1121   / 2048), zIndex: 4),
+                ComponentPieceDefinition(id: "balustrade", imageName: "gugong_balustrade", name: "汉白玉栏杆", description: "三层汉白玉台基四周环绕云龙纹栏杆，每根望柱柱头雕刻云龙或凤凰，雨水从螭首排出。",         targetCenter: CGPoint(x: 983.5  / 2048, y: 1302   / 2048), zIndex: 3),
+                ComponentPieceDefinition(id: "wall",       imageName: "gugong_wall",       name: "墙壁",       description: "朱红宫墙以糯米浆与石灰混合砌筑，厚约1米，既防火又隔音，历经六百年仍坚固如初。",           targetCenter: CGPoint(x: 1135.5 / 2048, y: 1431   / 2048), zIndex: 2),
+                ComponentPieceDefinition(id: "base",       imageName: "gugong_base",       name: "汉白玉底座", description: "三层须弥座台基高达8.13米，全部用汉白玉砌成，每层台基边缘均有螭首排水，气势恢宏。",         targetCenter: CGPoint(x: 1016.5 / 2048, y: 1331   / 2048), zIndex: 1),
+                ComponentPieceDefinition(id: "interior",   imageName: "gugong_interior",   name: "内部结构",   description: "以楠木为主要承重构件，抬梁式木构架体系，梁架之间以榫卯连接，无需一根铁钉。",               targetCenter: CGPoint(x: 1049   / 2048, y: 1104   / 2048), zIndex: 0),
+            ],
+            canvasSize: CGSize(width: 2048, height: 2048)
+        )
+        levels.append(gugong)
+
         return levels
     }
-    
+
     // MARK: - Content Access
     func getLevels(for categoryId: UUID) -> [PuzzleLevel] {
         if categoryId == UGCManager.ugcCategoryId {
