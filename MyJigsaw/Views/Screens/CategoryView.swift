@@ -12,6 +12,7 @@ struct CategoryView: View {
     @StateObject private var contentManager = ContentManager.shared
     @StateObject private var persistenceManager = PersistenceManager.shared
     @StateObject private var ugcManager = UGCManager.shared
+    private let storyManager = StoryManager.shared
 
     @State private var showDIYCreation = false
     @State private var selectedMode: PuzzleMode = .grid
@@ -20,12 +21,40 @@ struct CategoryView: View {
         contentManager.getLevels(for: category.id)
     }
 
+    private var orderedLevels: [PuzzleLevel] {
+        if category.isUGC {
+            return allLevels
+        }
+        return storyManager.orderedLevels(for: category, from: contentManager)
+    }
+
     private var hasComponentLevels: Bool {
         allLevels.contains(where: { $0.puzzleMode == .component })
     }
 
     private var filteredLevels: [PuzzleLevel] {
-        allLevels.filter { $0.puzzleMode == selectedMode }
+        orderedLevels.filter { $0.puzzleMode == selectedMode }
+    }
+
+    private var storyChapter: StoryChapter? {
+        storyManager.chapter(for: category)
+    }
+
+    private var storyProgress: (completed: Int, total: Int) {
+        storyManager.chapterProgress(
+            for: category,
+            contentManager: contentManager,
+            persistenceManager: persistenceManager
+        )
+    }
+
+    private var isCategoryUnlocked: Bool {
+        storyManager.isChapterUnlocked(
+            category,
+            among: contentManager.categories,
+            contentManager: contentManager,
+            persistenceManager: persistenceManager
+        )
     }
 
     var body: some View {
@@ -39,8 +68,10 @@ struct CategoryView: View {
                     if category.isUGC {
                         ugcSection
                     } else {
-                        modePicker
-                            .padding(.horizontal)
+                        if hasComponentLevels {
+                            modePicker
+                                .padding(.horizontal)
+                        }
                         levelsGrid
                     }
                 }
@@ -56,18 +87,74 @@ struct CategoryView: View {
     
     // MARK: - Header Section
     private var headerSection: some View {
-        VStack(spacing: 12) {
-            Image(category.coverImageName)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 120, height: 120)
-                .cornerRadius(12)
-                .clipped()
-            
-            Text(category.description)
-                .traditionalSubheadline()
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
+        Group {
+            if category.isUGC {
+                VStack(spacing: 12) {
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.system(size: 56))
+                        .foregroundColor(.traditional.vermilion)
+
+                    Text(category.description)
+                        .traditionalSubheadline()
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
+            } else {
+                VStack(spacing: 16) {
+                    Image(category.coverImageName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 120, height: 120)
+                        .cornerRadius(12)
+                        .clipped()
+
+                    if let storyChapter {
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Text("\(storyChapter.chapterLabel) · \(storyChapter.chapterTitle)")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(.traditional.vermilion)
+
+                                Spacer()
+
+                                Text("已修复 \(storyProgress.completed)/\(storyProgress.total)")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(.traditional.ink.opacity(0.65))
+                            }
+
+                            Text(category.description)
+                                .font(.system(size: 15, design: .serif))
+                                .foregroundColor(.traditional.ink)
+                                .lineSpacing(4)
+
+                            Text(storyChapter.summary)
+                                .font(.system(size: 14, design: .serif))
+                                .foregroundColor(.traditional.ink.opacity(0.75))
+                                .lineSpacing(4)
+
+                            Divider()
+                                .overlay(Color.traditional.ocher.opacity(0.25))
+
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("本章目标")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(.traditional.ink.opacity(0.58))
+                                Text(storyChapter.objective)
+                                    .font(.system(size: 14, design: .serif))
+                                    .foregroundColor(.traditional.ink.opacity(0.82))
+                                    .lineSpacing(4)
+                            }
+                        }
+                        .padding(18)
+                        .background(Color.white.opacity(0.88))
+                        .cornerRadius(16)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color.traditional.ocher.opacity(0.24), lineWidth: 1)
+                        )
+                    }
+                }
+            }
         }
         .padding(.bottom, 10)
     }
@@ -183,14 +270,39 @@ struct CategoryView: View {
                 ], spacing: 16) {
                     ForEach(filteredLevels) { level in
                         NavigationLink(destination: PuzzleGameView(level: level)) {
-                            LevelCard(level: level)
+                            LevelCard(
+                                level: level,
+                                pageLabel: storyManager.pageLabel(for: level, in: category, from: contentManager),
+                                isUnlocked: isLevelUnlocked(level),
+                                lockReason: levelLockReason(level)
+                            )
                         }
                         .buttonStyle(PlainButtonStyle())
-                        .disabled(level.isLocked)
+                        .disabled(!isLevelUnlocked(level))
                     }
                 }
             }
         }
+    }
+
+    private func isLevelUnlocked(_ level: PuzzleLevel) -> Bool {
+        storyManager.isLevelUnlocked(
+            level,
+            in: category,
+            among: contentManager.categories,
+            contentManager: contentManager,
+            persistenceManager: persistenceManager
+        )
+    }
+
+    private func levelLockReason(_ level: PuzzleLevel) -> String? {
+        storyManager.levelLockReason(
+            level,
+            in: category,
+            among: contentManager.categories,
+            contentManager: contentManager,
+            persistenceManager: persistenceManager
+        )
     }
 
     private var categoryNameIcon: String {
@@ -316,6 +428,9 @@ struct UGCLevelCard: View {
 // MARK: - Level Card
 struct LevelCard: View {
     let level: PuzzleLevel
+    let pageLabel: String?
+    let isUnlocked: Bool
+    let lockReason: String?
     @ObservedObject private var persistenceManager = PersistenceManager.shared
 
     private var progress: PuzzleProgress {
@@ -332,8 +447,32 @@ struct LevelCard: View {
                         .frame(width: .infinity, height: 120, alignment: .center) 
                         .cornerRadius(12)
                         .clipped()
+
+                    if let pageLabel {
+                        VStack {
+                            HStack {
+                                Text(pageLabel)
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundColor(.traditional.ink)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 5)
+                                    .background(Color.traditional.paper.opacity(0.92))
+                                    .overlay(
+                                        Capsule()
+                                            .stroke(Color.traditional.ocher.opacity(0.35), lineWidth: 1)
+                                    )
+                                    .clipShape(Capsule())
+                                Spacer()
+                            }
+                            Spacer()
+                        }
+                        .padding(8)
+                    }
                     
-                    if level.isLocked {
+                    if !isUnlocked {
+                        Color.traditional.paper.opacity(0.35)
+                            .cornerRadius(12)
+
                         Image(systemName: "lock.fill")
                             .font(.system(size: 30))
                             .foregroundColor(.traditional.ink.opacity(0.3))
@@ -374,10 +513,17 @@ struct LevelCard: View {
                                 .font(.caption)
                         }
                     }
+
+                    if let lockReason, !isUnlocked {
+                        Text(lockReason)
+                            .font(.system(size: 11, design: .serif))
+                            .foregroundColor(.traditional.vermilion)
+                            .lineLimit(2)
+                    }
                 }
             }
             .traditionalCard()
-            .opacity(level.isLocked ? 0.7 : 1.0)
+            .opacity(isUnlocked ? 1.0 : 0.72)
         }
     }
     

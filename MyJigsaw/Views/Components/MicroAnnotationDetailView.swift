@@ -17,7 +17,7 @@ struct MicroAnnotationDetailView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     // 所有微注释
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("微注释")
+                        Text("史料摘记")
                             .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.traditional.ink)
 
@@ -51,7 +51,7 @@ struct MicroAnnotationDetailView: View {
 
                     // 详情段落
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("详细解读")
+                        Text("卷内附录")
                             .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.traditional.ink)
 
@@ -95,7 +95,7 @@ struct MicroAnnotationDetailView: View {
                 .padding()
             }
             .background(Color.traditional.paper.ignoresSafeArea())
-            .navigationTitle("文化解读")
+            .navigationTitle("卷内附录")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

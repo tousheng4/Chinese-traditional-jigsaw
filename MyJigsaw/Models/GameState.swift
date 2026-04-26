@@ -114,6 +114,7 @@ class GameState {
     
     func endGame() {
         isGameActive = false
+        isGameCompleted = false
         currentLevel = nil
         puzzlePieces = []
         selectedPieceId = nil

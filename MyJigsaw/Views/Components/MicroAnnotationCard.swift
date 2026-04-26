@@ -24,7 +24,7 @@ struct MicroAnnotationCard: View {
         VStack(alignment: .leading, spacing: 12) {
             // 标题
             HStack {
-                Text("微注释")
+                Text("史料摘记")
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.traditional.ink.opacity(0.8))
 
@@ -35,7 +35,7 @@ struct MicroAnnotationCard: View {
                     showingDetail = true
                 }) {
                     HStack(spacing: 4) {
-                        Text("了解更多")
+                        Text("卷内详解")
                             .font(.system(size: 14))
                             .foregroundColor(.traditional.vermilion)
                         Image(systemName: "chevron.right")

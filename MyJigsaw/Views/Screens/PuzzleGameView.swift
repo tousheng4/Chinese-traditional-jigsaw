@@ -18,12 +18,15 @@ struct PuzzleGameView: View {
     @StateObject private var contentManager = ContentManager.shared
     @StateObject private var ugcManager = UGCManager.shared
     @StateObject private var persistenceManager = PersistenceManager.shared
-    @State private var showingCompletion = false
     @State private var showingPauseMenu = false
-    @State private var wasFirstCompletion = false
+    @State private var wasCompletedBeforeRun = false
+    @State private var introDialogueLines: [DialogueLine] = []
+    @State private var currentDialogueIndex = 0
+    @State private var hasPresentedIntroDialogue = false
     @State private var ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     @State private var activeDragPieceId: UUID?
     @State private var cachedUGCBoardImage: UIImage?
+    private let storyManager = StoryManager.shared
     // 完成动画状态
     @State private var showBoardReveal = false
     @State private var showConfetti = false
@@ -34,16 +37,41 @@ struct PuzzleGameView: View {
         contentManager.getMicroAnnotationPack(for: level)
     }
 
+    private var storyChapter: StoryChapter? {
+        storyManager.chapter(for: level, contentManager: contentManager)
+    }
+
+    private var levelNarrative: LevelNarrative? {
+        storyManager.narrative(for: level)
+    }
+
+    private var storyPageLabel: String? {
+        guard let category = contentManager.getCategory(for: level.categoryId) else { return nil }
+        return storyManager.pageLabel(for: level, in: category, from: contentManager)
+    }
+
+    private var hasIntroDialogue: Bool {
+        !introDialogueLines.isEmpty
+    }
+
+    private var shouldShowIntroDialogue: Bool {
+        hasIntroDialogue && !hasPresentedIntroDialogue
+    }
+
     private var isFirstCompletion: Bool {
-        if showCompletionScreen {
-            let progress = PersistenceManager.shared.getGameProgress(forStableId: level.stableId)
-            return !progress.isCompleted
-        } else if puzzleEngine.gameState.isGameCompleted {
-            let progress = PersistenceManager.shared.getGameProgress(forStableId: level.stableId)
-            wasFirstCompletion = !progress.isCompleted
-            return wasFirstCompletion
-        }
-        return false
+        (showCompletionScreen || puzzleEngine.gameState.isGameCompleted) && !wasCompletedBeforeRun
+    }
+
+    private var storyCompleted: Bool {
+        storyManager.isStoryCompleted(
+            from: contentManager.categories,
+            contentManager: contentManager,
+            persistenceManager: persistenceManager
+        )
+    }
+
+    private var didJustCompleteStory: Bool {
+        isFirstCompletion && storyCompleted
     }
     
     var body: some View {
@@ -83,6 +111,22 @@ struct PuzzleGameView: View {
                         }
                         .animation(.easeInOut(duration: 0.22), value: selectedComponentDef?.id)
                     }
+                } else if shouldShowIntroDialogue {
+                    DialogueSceneView(
+                        levelTitle: level.title,
+                        chapter: storyChapter,
+                        pageLabel: storyPageLabel,
+                        lines: introDialogueLines,
+                        currentIndex: currentDialogueIndex,
+                        previewImageName: level.previewImageName,
+                        onAdvance: advanceDialogue,
+                        onFinish: {
+                            beginRepairAfterDialogue(boardSize: boardSize, screenSize: geometry.size)
+                        },
+                        onSkip: {
+                            beginRepairAfterDialogue(boardSize: boardSize, screenSize: geometry.size)
+                        }
+                    )
                 } else if !puzzleEngine.gameState.isGameCompleted {
                     startScreen(boardSize: boardSize, screenSize: geometry.size)
                 }
@@ -120,31 +164,33 @@ struct PuzzleGameView: View {
                 }
             }
         }
-        .navigationTitle(level.title)
+        .navigationTitle(shouldShowIntroDialogue ? "" : level.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItemGroup(placement: .navigationBarTrailing) {
-                // 一键通关按钮
-                Button(action: {
-                    autoCompleteGame()
-                }) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.green)
-                }
+            if puzzleEngine.gameState.isGameActive {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    // 一键通关按钮
+                    Button(action: {
+                        autoCompleteGame()
+                    }) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.green)
+                    }
 
-                // 暂停按钮
-                Button(action: {
-                    showingPauseMenu = true
-                }) {
-                    Image(systemName: "pause.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.traditional.ink)
+                    // 暂停按钮
+                    Button(action: {
+                        showingPauseMenu = true
+                    }) {
+                        Image(systemName: "pause.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.traditional.ink)
+                    }
                 }
             }
         }
         .onAppear {
-            // Don't auto-start the game, let the user tap start
+            prepareIntroDialogueIfNeeded()
         }
         .onDisappear {
             // no-op: we use Combine timer publisher
@@ -415,166 +461,202 @@ struct PuzzleGameView: View {
     
     // MARK: - Start Screen
     private func startScreen(boardSize: CGFloat, screenSize: CGSize) -> some View {
-        VStack(spacing: 30) {
-            // Level preview
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.traditional.lightGray)
-                .aspectRatio(1, contentMode: .fit)
-                .overlay(
-                    Group {
-                        // 开始页优先用缩略图（更快），没有再退回到棋盘图缓存/资源图
-                        if let thumb = currentUGCThumbnail() {
-                            Image(uiImage: thumb)
-                                .resizable()
-                                .scaledToFill()
-                                .clipped()
-                        } else if let ugcImage = cachedUGCBoardImage {
-                            Image(uiImage: ugcImage)
-                                .resizable()
-                                .scaledToFill()
-                                .clipped()
-                        } else {
-                            Image(level.previewImageName)
-                                .resizable()
-                                .scaledToFill()
-                                .clipped()
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 24) {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.traditional.lightGray)
+                    .aspectRatio(level.puzzleMode == .component && level.canvasAspect > 0 ? level.canvasAspect : 1, contentMode: .fit)
+                    .overlay(
+                        Group {
+                            if let thumb = currentUGCThumbnail() {
+                                Image(uiImage: thumb)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .clipped()
+                            } else if let ugcImage = cachedUGCBoardImage {
+                                Image(uiImage: ugcImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .clipped()
+                            } else {
+                                Image(level.previewImageName)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .clipped()
+                            }
                         }
-                    }
-                )
-                .padding(.horizontal, 40)
-                .shadow(color: Color.traditional.ink.opacity(0.1), radius: 10, x: 0, y: 5)
-            
-            // Level info
-            VStack(spacing: 16) {
-                Text(level.title)
-                    .traditionalTitle()
+                    )
+                    .shadow(color: Color.traditional.ink.opacity(0.1), radius: 10, x: 0, y: 5)
                 
-                Text(level.sourceInfo)
-                    .traditionalSubheadline()
-                    .multilineTextAlignment(.center)
-                
-                HStack {
-                    Text("难度:")
-                        .traditionalSubheadline()
+                VStack(spacing: 16) {
+                    Text(level.title)
+                        .traditionalTitle()
                     
-                    Text(level.difficulty.rawValue)
-                        .font(.qianTuBiFeng(size: 15))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
-                        .background(difficultyColor.opacity(0.1))
-                        .foregroundColor(difficultyColor)
-                        .cornerRadius(8)
+                    Text(level.sourceInfo)
+                        .traditionalSubheadline()
+                        .multilineTextAlignment(.center)
+                    
+                    HStack {
+                        Text("难度:")
+                            .traditionalSubheadline()
+                        
+                        Text(level.difficulty.rawValue)
+                            .font(.qianTuBiFeng(size: 15))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 4)
+                            .background(difficultyColor.opacity(0.1))
+                            .foregroundColor(difficultyColor)
+                            .cornerRadius(8)
+                    }
                 }
+                
+                if !hasIntroDialogue, let storyChapter, let levelNarrative {
+                    StoryBriefCard(
+                        chapter: storyChapter,
+                        narrative: levelNarrative,
+                        pageLabel: storyPageLabel
+                    )
+                }
+                
+                Button(action: { startGame(boardSize: boardSize, screenSize: screenSize) }) {
+                    Text(hasIntroDialogue ? "直接进入修复" : "开始游戏")
+                }
+                .buttonStyle(TraditionalButtonStyle())
             }
-            
-            // Start button
-            Button(action: { startGame(boardSize: boardSize, screenSize: screenSize) }) {
-                Text("开始游戏")
-            }
-            .buttonStyle(TraditionalButtonStyle())
-            .padding(.horizontal, 40)
+            .frame(maxWidth: 560)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 24)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     // MARK: - Completion Screen
     private var completionScreen: some View {
-        VStack(spacing: 20) {
-            // 部件模式：展示完整图片
-            if level.puzzleMode == .component {
-                Image(level.previewImageName)
-                    .resizable()
-                    .scaledToFit()
-                    .cornerRadius(12)
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.traditional.ocher, lineWidth: 2))
-                    .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 4)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 8)
-            }
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 20) {
+                if level.puzzleMode == .component {
+                    Image(level.previewImageName)
+                        .resizable()
+                        .scaledToFit()
+                        .cornerRadius(12)
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.traditional.ocher, lineWidth: 2))
+                        .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 4)
+                        .padding(.top, 8)
+                }
 
-            // Completion message
-            VStack(spacing: 8) {
-                Text("恭喜完成！")
-                    .font(.qianTuBiFeng(size: 28))
-                    .foregroundColor(.white)
+                VStack(spacing: 8) {
+                    Text("本页修复完成")
+                        .font(.qianTuBiFeng(size: 28))
+                        .foregroundColor(.white)
 
-                Text(level.puzzleMode == .component ? "您成功还原了\(level.title)" : "您成功完成了这幅拼图")
-                    .font(.qianTuBiFeng(size: 15))
-                    .foregroundColor(.traditional.paper.opacity(0.9))
-            }
-            
-            // Stats
-            VStack(spacing: 12) {
-                HStack {
-                    Text("完成步数:")
-                        .font(.system(size: 15))
-                        .foregroundColor(.traditional.ink.opacity(0.7))
-                    Spacer()
-                    Text("\(puzzleEngine.gameState.moveCount)")
-                        .font(.system(size: 17, weight: .medium))
-                        .foregroundColor(.traditional.ink)
+                    Text(level.puzzleMode == .component ? "\(level.title) 已重新归入卷册" : "这一页建筑残卷已修复归档")
+                        .font(.qianTuBiFeng(size: 15))
+                        .foregroundColor(.traditional.paper.opacity(0.9))
                 }
                 
-                if settingsManager.appSettings.timerEnabled {
+                if let storyChapter, let levelNarrative {
+                    StoryReportCard(
+                        chapter: storyChapter,
+                        narrative: levelNarrative,
+                        pageLabel: storyPageLabel
+                    )
+                }
+
+                if didJustCompleteStory {
+                    StoryFinaleCard(finale: storyManager.finale)
+                }
+                
+                VStack(spacing: 12) {
                     HStack {
-                        Text("完成时间:")
+                        Text("完成步数:")
                             .font(.system(size: 15))
                             .foregroundColor(.traditional.ink.opacity(0.7))
                         Spacer()
-                        Text(formatTime(puzzleEngine.gameState.elapsedTime))
+                        Text("\(puzzleEngine.gameState.moveCount)")
                             .font(.system(size: 17, weight: .medium))
                             .foregroundColor(.traditional.ink)
                     }
-                }
-            }
-            .traditionalCard()
-            .padding(.horizontal, 40)
-
-            // 微注释卡片
-            if let annotationPack = microAnnotationPack {
-                MicroAnnotationCard(annotationPack: annotationPack, isFirstCompletion: isFirstCompletion)
-                    .padding(.horizontal, 40)
-            }
-
-            // Buttons
-            VStack(spacing: 16) {
-                // 分享按钮
-                Button(action: shareCompletion) {
-                    HStack {
-                        Image(systemName: "square.and.arrow.up")
-                        Text("分享完成")
-                            .font(.qianTuBiFeng(size: 17))
+                    
+                    if settingsManager.appSettings.timerEnabled {
+                        HStack {
+                            Text("完成时间:")
+                                .font(.system(size: 15))
+                                .foregroundColor(.traditional.ink.opacity(0.7))
+                            Spacer()
+                            Text(formatTime(puzzleEngine.gameState.elapsedTime))
+                                .font(.system(size: 17, weight: .medium))
+                                .foregroundColor(.traditional.ink)
+                        }
                     }
                 }
-                .buttonStyle(TraditionalButtonStyle(isPrimary: false))
-                .background(Color.traditional.paper)
-                .cornerRadius(8)
-                .padding(.horizontal, 40)
+                .traditionalCard()
 
-                Button(action: { restartGame() }) {
-                    Text("再玩一次")
+                if let annotationPack = microAnnotationPack {
+                    MicroAnnotationCard(annotationPack: annotationPack, isFirstCompletion: isFirstCompletion)
                 }
-                .buttonStyle(TraditionalButtonStyle(isPrimary: false))
-                .background(Color.traditional.paper)
-                .cornerRadius(8)
-                .padding(.horizontal, 40)
 
-                Button(action: { quitGame() }) {
-                    Text("返回")
+                VStack(spacing: 16) {
+                    Button(action: shareCompletion) {
+                        HStack {
+                            Image(systemName: "square.and.arrow.up")
+                            Text("分享完成")
+                                .font(.qianTuBiFeng(size: 17))
+                        }
+                    }
+                    .buttonStyle(TraditionalButtonStyle(isPrimary: false))
+                    .background(Color.traditional.paper)
+                    .cornerRadius(8)
+
+                    Button(action: { restartGame() }) {
+                        Text("再玩一次")
+                    }
+                    .buttonStyle(TraditionalButtonStyle(isPrimary: false))
+                    .background(Color.traditional.paper)
+                    .cornerRadius(8)
+
+                    Button(action: { quitGame() }) {
+                        Text("返回")
+                    }
+                    .buttonStyle(TraditionalButtonStyle())
                 }
-                .buttonStyle(TraditionalButtonStyle())
-                .padding(.horizontal, 40)
             }
+            .frame(maxWidth: 560)
+            .padding()
         }
-        .padding()
-        .background(Color.traditional.ink.opacity(0.95)) // 加深背景不透明度
+        .background(Color.traditional.ink.opacity(0.95))
         .cornerRadius(20)
         .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.traditional.ocher, lineWidth: 2))
-        .shadow(color: Color.black.opacity(0.5), radius: 20, x: 0, y: 10) // 添加阴影
+        .shadow(color: Color.black.opacity(0.5), radius: 20, x: 0, y: 10)
         .padding()
     }
 
     // MARK: - Game Actions
+    private func prepareIntroDialogueIfNeeded() {
+        guard introDialogueLines.isEmpty else { return }
+        introDialogueLines = storyManager.introDialogue(for: level, contentManager: contentManager)
+        currentDialogueIndex = 0
+    }
+
+    private func advanceDialogue() {
+        guard currentDialogueIndex < introDialogueLines.count - 1 else { return }
+        withAnimation(.easeInOut(duration: 0.2)) {
+            currentDialogueIndex += 1
+        }
+    }
+
+    private func beginRepairAfterDialogue(boardSize: CGFloat, screenSize: CGSize) {
+        hasPresentedIntroDialogue = true
+        currentDialogueIndex = 0
+        startGame(boardSize: boardSize, screenSize: screenSize)
+    }
+
     private func startGame(boardSize: CGFloat, screenSize: CGSize) {
+        hasPresentedIntroDialogue = true
+        wasCompletedBeforeRun = persistenceManager.getGameProgress(forStableId: level.stableId).isCompleted
+        showBoardReveal = false
+        showConfetti = false
+        showCompletionScreen = false
+        activeDragPieceId = nil
         puzzleEngine.startNewGame(level: level, boardSize: boardSize, screenSize: screenSize)
     }
 
