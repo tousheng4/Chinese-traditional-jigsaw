@@ -42,8 +42,8 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            // 应用启动时评估所有成就状态
-            achievementCenter.evaluateAllAchievements()
+            // 应用启动时静默刷新成就状态，不触发解锁弹出
+            achievementCenter.evaluateAllAchievementsSilently()
 
             // 调试：检查持久化数据
             //let persistenceManager = PersistenceManager.shared

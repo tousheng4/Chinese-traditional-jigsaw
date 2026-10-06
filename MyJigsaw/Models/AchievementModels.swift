@@ -18,7 +18,7 @@ struct AchievementDefinition: Identifiable, Codable, Equatable {
     // 预定义成就 - 将在运行时动态生成，以匹配实际的category ID
     static func moduleAchievements(for categories: [PuzzleCategory]) -> [AchievementDefinition] {
         return categories.map { category in
-            let achievementId = "ach_category_\(category.id.uuidString)_complete"
+            let achievementId = "ach_category_\(category.title)_complete"
             let title: String
             let description: String
             let iconAssetName: String

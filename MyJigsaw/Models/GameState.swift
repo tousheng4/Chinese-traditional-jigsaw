@@ -389,7 +389,7 @@ class GameState {
                 elapsedTime = Date().timeIntervalSince(startTime)
             }
 
-        // 游戏完成时立即保存进度
+        // 游戏完成时立即保存进度并评估成就
         if let level = currentLevel {
             PersistenceManager.shared.saveGameProgress(
                 levelStableId: level.stableId,
@@ -397,6 +397,14 @@ class GameState {
                 time: elapsedTime,
                 moves: moveCount
             )
+            let stableId = level.stableId
+            let categoryId = level.categoryId.uuidString
+            Task { @MainActor in
+                AchievementCenter.shared.handleLevelCompleted(
+                    levelStableId: stableId,
+                    categoryId: categoryId
+                )
+            }
         }
         }
     }

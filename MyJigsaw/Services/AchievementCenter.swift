@@ -20,6 +20,7 @@ class AchievementCenter: ObservableObject {
     @Published var achievements: [AchievementViewData] = []
     @Published var newlyUnlockedAchievement: AchievementDefinition?
 
+    private var suppressNotifications = true
     private var cancellables = Set<AnyCancellable>()
 
     private init() {
@@ -31,7 +32,14 @@ class AchievementCenter: ObservableObject {
 
     // MARK: - Public Methods
 
-    /// 评估所有成就（应用启动时调用）
+    /// 评估所有成就（应用启动时调用，不触发解锁弹出）
+    func evaluateAllAchievementsSilently() {
+        suppressNotifications = true
+        evaluateAllAchievements()
+        suppressNotifications = false
+    }
+
+    /// 评估所有成就
     func evaluateAllAchievements() {
         let moduleAchievements = AchievementDefinition.moduleAchievements(for: contentManager.categories)
         let globalAchievements = AchievementDefinition.globalAchievements
@@ -322,8 +330,8 @@ class AchievementCenter: ObservableObject {
 
         state.updateProgress(completed: completed, total: total)
 
-        // 如果刚解锁，记录为新解锁成就
-        if state.isUnlocked && !wasUnlocked {
+        // 如果刚解锁且非静默模式，触发弹出通知
+        if state.isUnlocked && !wasUnlocked && !suppressNotifications {
             let moduleAchievements = AchievementDefinition.moduleAchievements(for: contentManager.categories)
             let globalAchievements = AchievementDefinition.globalAchievements
             let allAchievements = moduleAchievements + globalAchievements

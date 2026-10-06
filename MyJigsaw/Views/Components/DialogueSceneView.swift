@@ -2,8 +2,8 @@
 //  DialogueSceneView.swift
 //  MyJigsaw
 //
-//  Created by Codex on 2026/4/25.
 //
+// AI辅助生成：豆包, 2026-04-25
 import SwiftUI
 import UIKit
 

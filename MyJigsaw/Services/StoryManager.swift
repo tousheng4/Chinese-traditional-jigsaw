@@ -2,7 +2,6 @@
 //  StoryManager.swift
 //  MyJigsaw
 //
-//  Created by Codex on 2026/4/25.
 //
 
 import Foundation

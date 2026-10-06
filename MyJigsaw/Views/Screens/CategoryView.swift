@@ -342,13 +342,13 @@ struct UGCLevelCard: View {
                         Image(uiImage: thumbnail)
                             .resizable()
                             .scaledToFill()
-                            .frame(width: .infinity, height: 120, alignment: .center)
+                            .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 120)
                             .cornerRadius(12)
                             .clipped()
                     } else {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color.gray.opacity(0.3))
-                            .frame(width: .infinity, height: 120)
+                            .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 120)
                             .overlay(
                                 Image(systemName: "photo")
                                     .foregroundColor(.gray)
@@ -443,8 +443,8 @@ struct LevelCard: View {
                 ZStack(alignment: .center) {
                     Image(level.previewImageName)
                         .resizable()
-                        .scaledToFit() 
-                        .frame(width: .infinity, height: 120, alignment: .center) 
+                        .scaledToFit()
+                        .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 120)
                         .cornerRadius(12)
                         .clipped()
 
